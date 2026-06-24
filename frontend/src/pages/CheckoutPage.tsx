@@ -145,7 +145,7 @@ export const CheckoutPage: React.FC = () => {
       await new Promise(r => setTimeout(r, 2000));
 
       // MOCK PAYMENT — NOT REAL — calls backend to update plan + generate invoice
-      const res = await fetch('${API_URL}/checkout', {
+      const res = await fetch(`${API_URL}/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
