@@ -16,8 +16,10 @@ import adminRouter from './routes/admin';
 import contactRouter from './routes/contact';
 import checkoutRouter from './routes/checkout';
 import adminSettingsRouter from './routes/adminSettings';
+import demoRouter from './routes/demo';
 import { requestLogger } from './middleware/logger';
 import { authRateLimiter, uploadRateLimiter, contactRateLimiter } from './middleware/rateLimiter';
+import db from './models/db';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -101,6 +103,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/admin/settings', adminSettingsRouter);
+app.use('/api/demo', demoRouter);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -117,4 +120,16 @@ app.listen(PORT, () => {
   console.log(`📂 Serviced uploads path: http://localhost:${PORT}/uploads`);
   console.log(`❤️ Health check: http://localhost:${PORT}/health`);
   console.log(`=================================================`);
+
+  // Run initial demo cleanup on startup
+  db.cleanupExpiredDemoData().catch(err => {
+    console.error('[Startup] Failed to run initial demo cleanup:', err);
+  });
+
+  // Start periodic demo cleanup worker (every 10 minutes)
+  setInterval(() => {
+    db.cleanupExpiredDemoData().catch(err => {
+      console.error('[Interval Worker] Failed to run demo cleanup:', err);
+    });
+  }, 10 * 60 * 1000);
 });
