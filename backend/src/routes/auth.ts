@@ -85,6 +85,9 @@ router.post('/google', async (req, res: Response) => {
         'Welcome to ThreadCounty! 🎉',
         'Your account was created via Google. Explore AI-powered fabric analysis now!'
       );
+
+      // Generate temporary demo data for new visitors
+      await db.generateDemoDataForUser(user.id);
     }
 
     // Issue JWT
@@ -133,6 +136,9 @@ router.post('/signup', async (req, res: Response) => {
 
     // Create notifications for welcome
     await db.createNotification(user.id, 'Welcome to ThreadCounty!', 'Your account has been created successfully. Explore our textile analysis tools!');
+
+    // Generate temporary demo data for new visitors
+    await db.generateDemoDataForUser(user.id);
 
     // Generate JWT token
     const token = jwt.sign(
