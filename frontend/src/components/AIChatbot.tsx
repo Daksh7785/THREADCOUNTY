@@ -1,7 +1,8 @@
+import { API } from '../config';
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, Send, Mic, Cpu, Sparkles } from 'lucide-react';
 
-const API = '${API}';
+
 
 interface Message {
   sender: 'user' | 'ai';
