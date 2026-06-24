@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Search, Trash2, Eye, X, ChevronDown } from 'lucide-react';
 
-const API = 'http://localhost:5000';
+const API = '${API}';
 
 const STATUS_COLORS: Record<string, string> = {
   completed:  'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400',
