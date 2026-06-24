@@ -13,7 +13,12 @@ export interface AuthRequest extends Request {
 
 export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token = authHeader && authHeader.split(' ')[1];
+
+  // Support reading token from query parameters (e.g. for browser-initiated downloads)
+  if (!token && req.query.token) {
+    token = req.query.token as string;
+  }
 
   if (!token) {
     res.status(401).json({ error: 'Access token missing or invalid.' });
