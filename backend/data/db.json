@@ -1,0 +1,277 @@
+{
+  "users": {
+    "u-admin-seed": {
+      "passwordHash": "$2a$10$kfiF8NAQdL73psfs5DnU5efMiFBmcFtvb5Cu7DyJOn2dF0m5gm5xm"
+    },
+    "u-free-seed": {
+      "passwordHash": "$2a$10$kfiF8NAQdL73psfs5DnU5efMiFBmcFtvb5Cu7DyJOn2dF0m5gm5xm"
+    },
+    "u-student-seed": {
+      "passwordHash": "$2a$10$kfiF8NAQdL73psfs5DnU5efMiFBmcFtvb5Cu7DyJOn2dF0m5gm5xm"
+    },
+    "u-pro-seed": {
+      "passwordHash": "$2a$10$kfiF8NAQdL73psfs5DnU5efMiFBmcFtvb5Cu7DyJOn2dF0m5gm5xm"
+    },
+    "u-enterprise-seed": {
+      "passwordHash": "$2a$10$kfiF8NAQdL73psfs5DnU5efMiFBmcFtvb5Cu7DyJOn2dF0m5gm5xm"
+    },
+    "u-as1zejvvi": {
+      "passwordHash": "$2a$10$5NRkHiHZrn/SX4Aa.xNutuHZXNc0g8JxVJRVxSdp1vxP8vT7h7YLK"
+    },
+    "u-jymbmlg8x": {
+      "passwordHash": "$2a$10$TxO372LAZMr5F1/154V.AeRdgbwRkxm3SpxqHjE1gqfj4RNrUDFF2"
+    }
+  },
+  "profiles": [
+    {
+      "id": "u-admin-seed",
+      "email": "admin@threadcounty.app",
+      "name": "County Admin",
+      "company": "ThreadCounty Inc.",
+      "role": "admin",
+      "plan": "Free",
+      "storage_used": 0,
+      "created_at": "2026-04-25T14:24:44.467Z",
+      "avatar_url": ""
+    },
+    {
+      "id": "u-free-seed",
+      "email": "demo.free@threadcounty.app",
+      "name": "Frank Free",
+      "company": "Freelance Design Co",
+      "role": "user",
+      "plan": "Free",
+      "storage_used": 524288,
+      "created_at": "2026-06-14T14:24:44.469Z"
+    },
+    {
+      "id": "u-student-seed",
+      "email": "demo.student@threadcounty.app",
+      "name": "Sam Student",
+      "company": "National Institute of Fashion Technology",
+      "role": "user",
+      "plan": "Student",
+      "storage_used": 2097152,
+      "created_at": "2026-06-04T14:24:44.469Z"
+    },
+    {
+      "id": "u-pro-seed",
+      "email": "demo.pro@threadcounty.app",
+      "name": "Pam Professional",
+      "company": "Apex Textile Labs",
+      "role": "user",
+      "plan": "Professional",
+      "storage_used": 8388608,
+      "created_at": "2026-05-10T14:24:44.469Z"
+    },
+    {
+      "id": "u-enterprise-seed",
+      "email": "demo.enterprise@threadcounty.app",
+      "name": "Elena Enterprise",
+      "company": "Vanguard Weaving Mills",
+      "role": "user",
+      "plan": "Enterprise",
+      "storage_used": 15728640,
+      "created_at": "2026-03-26T14:24:44.469Z"
+    },
+    {
+      "id": "u-as1zejvvi",
+      "email": "agrawaldaksh@gmail.com",
+      "name": "Daksh",
+      "company": "",
+      "role": "user",
+      "plan": "Free",
+      "storage_used": 0,
+      "created_at": "2026-06-24T15:36:14.964Z"
+    },
+    {
+      "id": "u-jymbmlg8x",
+      "email": "agrawaldaksh9684@gmail.com",
+      "name": "Daksh",
+      "company": "",
+      "role": "user",
+      "plan": "Free",
+      "storage_used": 0,
+      "created_at": "2026-06-24T15:37:02.887Z"
+    }
+  ],
+  "uploads": [
+    {
+      "id": "up-001",
+      "user_id": "u-pro-seed",
+      "filename": "sample_denim.png",
+      "original_name": "denim_raw_500x.png",
+      "file_size": 1048576,
+      "file_path": "backend/uploads/sample_denim.png",
+      "created_at": "2026-06-19T14:24:44.469Z"
+    },
+    {
+      "id": "up-002",
+      "user_id": "u-pro-seed",
+      "filename": "sample_linen.png",
+      "original_name": "linen_blend.png",
+      "file_size": 524288,
+      "file_path": "backend/uploads/sample_linen.png",
+      "created_at": "2026-06-22T14:24:44.469Z"
+    },
+    {
+      "id": "up-003",
+      "user_id": "u-student-seed",
+      "filename": "sample_cotton.png",
+      "original_name": "cotton_twill.png",
+      "file_size": 2097152,
+      "file_path": "backend/uploads/sample_cotton.png",
+      "created_at": "2026-06-16T14:24:44.469Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "rep-001",
+      "upload_id": "up-001",
+      "user_id": "u-pro-seed",
+      "warp_count": 65,
+      "weft_count": 55,
+      "thread_density": 120,
+      "fabric_type": "Denim / Twill Weave",
+      "confidence": 0.97,
+      "suggestions": [
+        "Warp tension is slightly high; reduce by 2% to avoid fabric curling.",
+        "Weft alignment shows high consistency. Excellent weave uniformity.",
+        "Optimal yarn count detected for 12oz heavy denim manufacturing."
+      ],
+      "created_at": "2026-06-19T14:24:44.469Z"
+    },
+    {
+      "id": "rep-002",
+      "upload_id": "up-002",
+      "user_id": "u-pro-seed",
+      "warp_count": 40,
+      "weft_count": 42,
+      "thread_density": 82,
+      "fabric_type": "Linen / Plain Weave",
+      "confidence": 0.94,
+      "suggestions": [
+        "Plain weave structure verified with standard 1:1 interlacing.",
+        "Warp yarn thickness variation is within 3% tolerance.",
+        "Recommended for lightweight summer shirting."
+      ],
+      "created_at": "2026-06-22T14:24:44.469Z"
+    },
+    {
+      "id": "rep-003",
+      "upload_id": "up-003",
+      "user_id": "u-student-seed",
+      "warp_count": 60,
+      "weft_count": 62,
+      "thread_density": 122,
+      "fabric_type": "Cotton / Plain Weave",
+      "confidence": 0.98,
+      "suggestions": [
+        "High quality combed cotton thread profile detected.",
+        "Warp/weft ratio close to 1:1, offering optimal tensile strength.",
+        "Suitable for medium-weight shirts and home textiles."
+      ],
+      "created_at": "2026-06-16T14:24:44.469Z"
+    }
+  ],
+  "contact_messages": [
+    {
+      "id": "msg-001",
+      "name": "Sarah Connor",
+      "email": "sarah.c@skytextiles.com",
+      "subject": "Enterprise Plan Custom Quote",
+      "message": "Hi, we operate 15 factories across the EU and want to integrate ThreadCounty AI into our automated inspection lines. Do you support private cloud deployments?",
+      "created_at": "2026-06-20T14:24:44.469Z"
+    },
+    {
+      "id": "msg-002",
+      "name": "Rajesh Patel",
+      "email": "rajesh@suratweaves.in",
+      "subject": "Calibration Question",
+      "message": "Is there a way to calibrate the pixel-to-millimeter ratio for custom macro lens attachments?",
+      "created_at": "2026-06-23T14:24:44.469Z"
+    },
+    {
+      "id": "msg-8pzi0msyf",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T14:25:14.680Z"
+    },
+    {
+      "id": "msg-tn2pt4ywn",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T14:25:59.014Z"
+    },
+    {
+      "id": "msg-wormayw8v",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T14:54:48.084Z"
+    },
+    {
+      "id": "msg-olv3v6l79",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T14:56:23.264Z"
+    },
+    {
+      "id": "msg-mhss98ywq",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T14:56:57.339Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-001",
+      "user_id": "u-pro-seed",
+      "title": "Welcome to ThreadCounty!",
+      "message": "Explore automated thread density and warp/weft analysis by uploading your first fabric image.",
+      "is_read": true,
+      "created_at": "2026-05-10T14:24:44.469Z"
+    },
+    {
+      "id": "notif-002",
+      "user_id": "u-pro-seed",
+      "title": "Report Ready",
+      "message": "Your analysis report for sample_linen.png has been generated successfully.",
+      "is_read": false,
+      "created_at": "2026-06-22T14:24:44.469Z"
+    },
+    {
+      "id": "notif-e299xz9di",
+      "user_id": "u-admin-seed",
+      "title": "Plan Upgraded 🎉",
+      "message": "Your subscription has been upgraded to the Free Plan. Enjoy your new features!",
+      "is_read": false,
+      "created_at": "2026-06-24T14:53:55.505Z"
+    },
+    {
+      "id": "notif-r58n9helg",
+      "user_id": "u-as1zejvvi",
+      "title": "Welcome to ThreadCounty!",
+      "message": "Your account has been created successfully. Explore our textile analysis tools!",
+      "is_read": false,
+      "created_at": "2026-06-24T15:36:14.966Z"
+    },
+    {
+      "id": "notif-kgjbsfr29",
+      "user_id": "u-jymbmlg8x",
+      "title": "Welcome to ThreadCounty!",
+      "message": "Your account has been created successfully. Explore our textile analysis tools!",
+      "is_read": false,
+      "created_at": "2026-06-24T15:37:02.888Z"
+    }
+  ]
+}
