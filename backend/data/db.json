@@ -101,7 +101,7 @@
       "user_id": "u-pro-seed",
       "filename": "sample_denim.png",
       "original_name": "denim_raw_500x.png",
-      "file_size": 1048576,
+      "file_size": 890651,
       "file_path": "backend/uploads/sample_denim.png",
       "created_at": "2026-06-19T14:24:44.469Z"
     },
@@ -110,7 +110,7 @@
       "user_id": "u-pro-seed",
       "filename": "sample_linen.png",
       "original_name": "linen_blend.png",
-      "file_size": 524288,
+      "file_size": 1013580,
       "file_path": "backend/uploads/sample_linen.png",
       "created_at": "2026-06-22T14:24:44.469Z"
     },
@@ -122,6 +122,33 @@
       "file_size": 2097152,
       "file_path": "backend/uploads/sample_cotton.png",
       "created_at": "2026-06-16T14:24:44.469Z"
+    },
+    {
+      "id": "up-004",
+      "user_id": "u-free-seed",
+      "filename": "sample_silk.png",
+      "original_name": "mulberry_silk.png",
+      "file_size": 1013580,
+      "file_path": "backend/uploads/sample_silk.png",
+      "created_at": "2026-06-21T10:15:30.000Z"
+    },
+    {
+      "id": "up-005",
+      "user_id": "u-enterprise-seed",
+      "filename": "sample_wool.png",
+      "original_name": "merino_wool_blend.png",
+      "file_size": 890651,
+      "file_path": "backend/uploads/sample_wool.png",
+      "created_at": "2026-06-20T08:45:00.000Z"
+    },
+    {
+      "id": "up-006",
+      "user_id": "u-pro-seed",
+      "filename": "sample_cotton.png",
+      "original_name": "canvas_heavy.png",
+      "file_size": 2097152,
+      "file_path": "backend/uploads/sample_cotton.png",
+      "created_at": "2026-06-24T11:20:00.000Z"
     }
   ],
   "reports": [
@@ -172,6 +199,54 @@
         "Suitable for medium-weight shirts and home textiles."
       ],
       "created_at": "2026-06-16T14:24:44.469Z"
+    },
+    {
+      "id": "rep-004",
+      "upload_id": "up-004",
+      "user_id": "u-free-seed",
+      "warp_count": 80,
+      "weft_count": 85,
+      "thread_density": 165,
+      "fabric_type": "Silk / Satin Weave",
+      "confidence": 0.99,
+      "suggestions": [
+        "Extremely fine thread profile with high density Satin structure.",
+        "Surface luster index is optimal. No snags or thread breaks detected.",
+        "Ideal for premium sleepwear and luxury garments."
+      ],
+      "created_at": "2026-06-21T10:15:30.000Z"
+    },
+    {
+      "id": "rep-005",
+      "upload_id": "up-005",
+      "user_id": "u-enterprise-seed",
+      "warp_count": 28,
+      "weft_count": 26,
+      "thread_density": 54,
+      "fabric_type": "Wool / Twill Weave",
+      "confidence": 0.91,
+      "suggestions": [
+        "Low density coarse fiber weave verified. Standard wool twill structure.",
+        "Pilling risk is low based on fiber surface density analysis.",
+        "Suitable for winter outerwear and blankets."
+      ],
+      "created_at": "2026-06-20T08:45:00.000Z"
+    },
+    {
+      "id": "rep-006",
+      "upload_id": "up-006",
+      "user_id": "u-pro-seed",
+      "warp_count": 55,
+      "weft_count": 52,
+      "thread_density": 107,
+      "fabric_type": "Cotton / Canvas Weave",
+      "confidence": 0.95,
+      "suggestions": [
+        "Heavy cotton canvas structure verified.",
+        "Warp count is stable, weft shows minor alignment shift of 1.5%.",
+        "Highly recommended for heavy duty bags, sails, or upholstery."
+      ],
+      "created_at": "2026-06-24T11:20:00.000Z"
     }
   ],
   "contact_messages": [
@@ -230,6 +305,22 @@
       "subject": "Automated Test",
       "message": "This is a message from the automated integration test suite.",
       "created_at": "2026-06-24T14:56:57.339Z"
+    },
+    {
+      "id": "msg-vbc1lzw67",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T19:22:19.051Z"
+    },
+    {
+      "id": "msg-mw9grv3oy",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-24T19:24:47.940Z"
     }
   ],
   "notifications": [
