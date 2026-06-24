@@ -18,7 +18,7 @@ import {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-const API = 'http://localhost:5000';
+const API = '${API}';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
