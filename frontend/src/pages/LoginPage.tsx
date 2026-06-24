@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -33,7 +34,7 @@ export const LoginPage: React.FC = () => {
     if (!email || !password) { setError('Please fill in all fields.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch('${API_URL}/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, rememberMe })
