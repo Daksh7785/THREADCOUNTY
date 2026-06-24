@@ -1,3 +1,4 @@
+import { API } from '../config';
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +19,7 @@ import {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-const API = '${API}';
+
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
