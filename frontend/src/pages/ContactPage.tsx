@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -24,7 +25,7 @@ export const ContactPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/contact', {
+      const res = await fetch('${API_URL}/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
