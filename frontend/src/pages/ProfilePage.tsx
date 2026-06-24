@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +19,7 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (token && activeTab === 'activity' && activities.length === 0) {
       setActivityLoading(true);
-      fetch('http://localhost:5000/api/dashboard/notifications', {
+      fetch('${API_URL}/dashboard/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(r => r.ok ? r.json() : [])
@@ -63,7 +64,7 @@ export const ProfilePage: React.FC = () => {
     setLoadingProfile(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/user/profile', {
+      const res = await fetch('${API_URL}/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ export const ProfilePage: React.FC = () => {
     setLoadingPassword(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/user/change-password', {
+      const res = await fetch('${API_URL}/user/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +140,7 @@ export const ProfilePage: React.FC = () => {
     setDemoSuccess('');
     setDemoError('');
     try {
-      const res = await fetch('http://localhost:5000/api/demo/generate', {
+      const res = await fetch('${API_URL}/demo/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +165,7 @@ export const ProfilePage: React.FC = () => {
     setDemoSuccess('');
     setDemoError('');
     try {
-      const res = await fetch('http://localhost:5000/api/demo/clear', {
+      const res = await fetch('${API_URL}/demo/clear', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,7 +200,7 @@ export const ProfilePage: React.FC = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/user/delete-account', {
+      const res = await fetch('${API_URL}/user/delete-account', {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
