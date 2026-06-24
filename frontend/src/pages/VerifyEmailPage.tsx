@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -53,7 +54,7 @@ export const VerifyEmailPage: React.FC = () => {
     if (code.length < 6) { setError('Please enter the complete 6-digit code.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/verify-email', {
+      const res = await fetch('${API_URL}/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code })
