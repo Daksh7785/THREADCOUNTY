@@ -114,7 +114,7 @@ export const UploadPage: React.FC = () => {
       }, 300);
 
       // Upload file to server
-      const uploadRes = await fetch('${API_URL}/upload', {
+      const uploadRes = await fetch(`${API_URL}/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -147,7 +147,7 @@ export const UploadPage: React.FC = () => {
       }, 400);
 
       // Call report analyzer endpoint
-      const reportRes = await fetch('${API_URL}/report/analyze', {
+      const reportRes = await fetch(`${API_URL}/report/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
