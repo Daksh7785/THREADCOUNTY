@@ -332,7 +332,7 @@ export const ComparePage: React.FC = () => {
         </div>
         {bothSelected && (
           <a
-            href={`${API}/api/report/${repA.id}/download?format=pdf`}
+            href={`${API}/api/report/${repA.id}/download?format=pdf&token=${token}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow shadow-indigo-600/10 transition-all"
@@ -515,7 +515,7 @@ export const ComparePage: React.FC = () => {
                   ))}
                 </ul>
                 <a
-                  href={`${API}/api/report/${rep.id}/download?format=pdf`}
+                  href={`${API}/api/report/${rep.id}/download?format=pdf&token=${token}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`inline-flex items-center gap-1.5 text-xs font-bold text-${color}-600 dark:text-${color}-400 hover:underline`}
