@@ -25,7 +25,7 @@ export const ForgotPasswordPage: React.FC = () => {
     if (!email) { setError('Please input your email address.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('${API_URL}/auth/forgot-password', {
+      const res = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -49,7 +49,7 @@ export const ForgotPasswordPage: React.FC = () => {
     if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('${API_URL}/auth/reset-password', {
+      const res = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code, newPassword })
