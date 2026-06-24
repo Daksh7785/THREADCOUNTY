@@ -28,7 +28,7 @@ export const Dashboard: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      const res = await fetch('${API_URL}/dashboard/stats', {
+      const res = await fetch(`${API_URL}/dashboard/stats`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -49,7 +49,7 @@ export const Dashboard: React.FC = () => {
   const handleLoadDemo = async () => {
     setDemoLoading(true);
     try {
-      const res = await fetch('${API_URL}/demo/generate', {
+      const res = await fetch(`${API_URL}/demo/generate`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -68,7 +68,7 @@ export const Dashboard: React.FC = () => {
   const handleClearDemo = async () => {
     setDemoLoading(true);
     try {
-      const res = await fetch('${API_URL}/demo/clear', {
+      const res = await fetch(`${API_URL}/demo/clear`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
