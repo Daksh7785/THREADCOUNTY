@@ -44,3 +44,6 @@ ehthumbs.db
 backend/uploads/*
 !backend/uploads/sample_denim.png
 !backend/uploads/sample_linen.png
+!backend/uploads/sample_cotton.png
+!backend/uploads/sample_silk.png
+!backend/uploads/sample_wool.png
