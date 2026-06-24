@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -42,7 +43,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/dashboard/stats', {
+      const res = await fetch('${API_URL}/dashboard/stats', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -58,7 +59,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const markAsRead = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/dashboard/notifications/${id}/read`, {
+      const res = await fetch(`${API_URL}/dashboard/notifications/${id}/read`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`
