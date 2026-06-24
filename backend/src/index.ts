@@ -51,6 +51,17 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// Root welcome route
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    name: 'ThreadCounty API Service',
+    description: 'AI-powered fabric structure and density analysis backend',
+    status: 'active',
+    version: '1.0.0',
+    health: '/health'
+  });
+});
+
 // SEO robots.txt and sitemap.xml endpoints
 app.get('/robots.txt', (req: Request, res: Response) => {
   res.type('text/plain');
