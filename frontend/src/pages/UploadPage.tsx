@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -113,7 +114,7 @@ export const UploadPage: React.FC = () => {
       }, 300);
 
       // Upload file to server
-      const uploadRes = await fetch('http://localhost:5000/api/upload', {
+      const uploadRes = await fetch('${API_URL}/upload', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -146,7 +147,7 @@ export const UploadPage: React.FC = () => {
       }, 400);
 
       // Call report analyzer endpoint
-      const reportRes = await fetch('http://localhost:5000/api/report/analyze', {
+      const reportRes = await fetch('${API_URL}/report/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
