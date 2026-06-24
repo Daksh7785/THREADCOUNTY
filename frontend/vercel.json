@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://backend-sigma-liard-92.vercel.app/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://backend-sigma-liard-92.vercel.app/uploads/:path*" },
+    { "source": "/backend/uploads/:path*", "destination": "https://backend-sigma-liard-92.vercel.app/backend/uploads/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
