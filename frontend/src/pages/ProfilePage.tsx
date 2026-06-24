@@ -19,7 +19,7 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (token && activeTab === 'activity' && activities.length === 0) {
       setActivityLoading(true);
-      fetch('${API_URL}/dashboard/notifications', {
+      fetch(`${API_URL}/dashboard/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(r => r.ok ? r.json() : [])
@@ -64,7 +64,7 @@ export const ProfilePage: React.FC = () => {
     setLoadingProfile(true);
 
     try {
-      const res = await fetch('${API_URL}/user/profile', {
+      const res = await fetch(`${API_URL}/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ export const ProfilePage: React.FC = () => {
     setLoadingPassword(true);
 
     try {
-      const res = await fetch('${API_URL}/user/change-password', {
+      const res = await fetch(`${API_URL}/user/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export const ProfilePage: React.FC = () => {
     setDemoSuccess('');
     setDemoError('');
     try {
-      const res = await fetch('${API_URL}/demo/generate', {
+      const res = await fetch(`${API_URL}/demo/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ export const ProfilePage: React.FC = () => {
     setDemoSuccess('');
     setDemoError('');
     try {
-      const res = await fetch('${API_URL}/demo/clear', {
+      const res = await fetch(`${API_URL}/demo/clear`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,7 +200,7 @@ export const ProfilePage: React.FC = () => {
     }
 
     try {
-      const res = await fetch('${API_URL}/user/delete-account', {
+      const res = await fetch(`${API_URL}/user/delete-account`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
