@@ -41,7 +41,7 @@
       "company": "Freelance Design Co",
       "role": "user",
       "plan": "Free",
-      "storage_used": 524288,
+      "storage_used": 6262188,
       "created_at": "2026-06-14T14:24:44.469Z"
     },
     {
@@ -149,6 +149,72 @@
       "file_size": 2097152,
       "file_path": "backend/uploads/sample_cotton.png",
       "created_at": "2026-06-24T11:20:00.000Z"
+    },
+    {
+      "id": "up-demo-zi8iywe2q",
+      "user_id": "u-free-seed",
+      "filename": "sample_denim.png",
+      "original_name": "denim_raw_500x.png",
+      "file_size": 587812,
+      "file_path": "backend/uploads/sample_denim.png",
+      "created_at": "2026-06-10T19:32:12.880Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "up-demo-f4zteio89",
+      "user_id": "u-free-seed",
+      "filename": "sample_linen.png",
+      "original_name": "linen_blend.png",
+      "file_size": 908720,
+      "file_path": "backend/uploads/sample_linen.png",
+      "created_at": "2026-06-13T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "up-demo-ucg76glha",
+      "user_id": "u-free-seed",
+      "filename": "sample_cotton.png",
+      "original_name": "combed_cotton_180.png",
+      "file_size": 714483,
+      "file_path": "backend/uploads/sample_cotton.png",
+      "created_at": "2026-06-16T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "up-demo-v8wchdoh7",
+      "user_id": "u-free-seed",
+      "filename": "sample_silk.png",
+      "original_name": "mulberry_silk.png",
+      "file_size": 905760,
+      "file_path": "backend/uploads/sample_silk.png",
+      "created_at": "2026-06-19T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "up-demo-3hwnyl5a6",
+      "user_id": "u-free-seed",
+      "filename": "sample_wool.png",
+      "original_name": "merino_wool_blend.png",
+      "file_size": 965505,
+      "file_path": "backend/uploads/sample_wool.png",
+      "created_at": "2026-06-22T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "up-demo-xwjd31qoi",
+      "user_id": "u-free-seed",
+      "filename": "sample_cotton.png",
+      "original_name": "canvas_heavy.png",
+      "file_size": 1166328,
+      "file_path": "backend/uploads/sample_cotton.png",
+      "created_at": "2026-06-24T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
     }
   ],
   "reports": [
@@ -247,6 +313,114 @@
         "Highly recommended for heavy duty bags, sails, or upholstery."
       ],
       "created_at": "2026-06-24T11:20:00.000Z"
+    },
+    {
+      "id": "rep-demo-opobqt44l",
+      "upload_id": "up-demo-zi8iywe2q",
+      "user_id": "u-free-seed",
+      "warp_count": 68,
+      "weft_count": 56,
+      "thread_density": 124,
+      "fabric_type": "Denim / Twill Weave",
+      "confidence": 0.96,
+      "suggestions": [
+        "Warp tension is slightly high; reduce by 2% to avoid fabric curling.",
+        "Weft alignment shows high consistency. Excellent weave uniformity.",
+        "Optimal yarn count detected for 12oz heavy denim manufacturing."
+      ],
+      "created_at": "2026-06-10T19:32:12.880Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "rep-demo-s11zi3nww",
+      "upload_id": "up-demo-f4zteio89",
+      "user_id": "u-free-seed",
+      "warp_count": 42,
+      "weft_count": 44,
+      "thread_density": 86,
+      "fabric_type": "Linen / Plain Weave",
+      "confidence": 0.94,
+      "suggestions": [
+        "Plain weave structure verified with standard 1:1 interlacing.",
+        "Warp yarn thickness variation is within 3% tolerance.",
+        "Recommended for lightweight summer shirting."
+      ],
+      "created_at": "2026-06-13T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "rep-demo-gdraaik0q",
+      "upload_id": "up-demo-ucg76glha",
+      "user_id": "u-free-seed",
+      "warp_count": 92,
+      "weft_count": 88,
+      "thread_density": 180,
+      "fabric_type": "Cotton / Plain Weave",
+      "confidence": 0.97,
+      "suggestions": [
+        "High quality combed cotton thread profile detected.",
+        "Warp/weft ratio close to 1:1, offering optimal tensile strength.",
+        "Suitable for medium-weight shirts and home textiles."
+      ],
+      "created_at": "2026-06-16T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "rep-demo-21nvshxxt",
+      "upload_id": "up-demo-v8wchdoh7",
+      "user_id": "u-free-seed",
+      "warp_count": 120,
+      "weft_count": 110,
+      "thread_density": 230,
+      "fabric_type": "Silk / Satin Weave",
+      "confidence": 0.99,
+      "suggestions": [
+        "Extremely fine thread profile with high density Satin structure.",
+        "Surface luster index is optimal. No snags or thread breaks detected.",
+        "Ideal for premium sleepwear and luxury garments."
+      ],
+      "created_at": "2026-06-19T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "rep-demo-l8yp6htdt",
+      "upload_id": "up-demo-3hwnyl5a6",
+      "user_id": "u-free-seed",
+      "warp_count": 32,
+      "weft_count": 28,
+      "thread_density": 60,
+      "fabric_type": "Wool / Twill Weave",
+      "confidence": 0.92,
+      "suggestions": [
+        "Low density coarse fiber weave verified. Standard wool twill structure.",
+        "Pilling risk is low based on fiber surface density analysis.",
+        "Suitable for winter outerwear and blankets."
+      ],
+      "created_at": "2026-06-22T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "rep-demo-09lbp6nu5",
+      "upload_id": "up-demo-xwjd31qoi",
+      "user_id": "u-free-seed",
+      "warp_count": 55,
+      "weft_count": 52,
+      "thread_density": 107,
+      "fabric_type": "Cotton / Canvas Weave",
+      "confidence": 0.95,
+      "suggestions": [
+        "Heavy cotton canvas structure verified.",
+        "Warp count is stable, weft shows minor alignment shift of 1.5%.",
+        "Highly recommended for heavy duty bags, sails, or upholstery."
+      ],
+      "created_at": "2026-06-24T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
     }
   ],
   "contact_messages": [
@@ -363,6 +537,64 @@
       "message": "Your account has been created successfully. Explore our textile analysis tools!",
       "is_read": false,
       "created_at": "2026-06-24T15:37:02.888Z"
+    },
+    {
+      "id": "notif-demo-fn6zzfdab",
+      "user_id": "u-free-seed",
+      "title": "Welcome to ThreadCounty! 🎉",
+      "message": "Explore automated thread density and warp/weft analysis by uploading your first fabric image.",
+      "is_read": true,
+      "created_at": "2026-06-10T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "notif-demo-kq2m6rjiv",
+      "user_id": "u-free-seed",
+      "title": "Demo Analysis Ready",
+      "message": "Your analysis report for denim_raw_500x.png has been generated successfully.",
+      "is_read": true,
+      "created_at": "2026-06-10T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "notif-demo-y7fk14ko8",
+      "user_id": "u-free-seed",
+      "title": "Demo Analysis Ready",
+      "message": "Your analysis report for linen_blend.png has been generated successfully.",
+      "is_read": true,
+      "created_at": "2026-06-13T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "notif-demo-x83bvdwmo",
+      "user_id": "u-free-seed",
+      "title": "Invoice Generated",
+      "message": "Your monthly statement is ready for download in your billing settings.",
+      "is_read": true,
+      "created_at": "2026-06-19T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "notif-demo-7vwv8fvgw",
+      "user_id": "u-free-seed",
+      "title": "Demo Session Active 💡",
+      "message": "Welcome to the test drive! 6 sample reports have been seeded. Note that these records will auto-expire and purge in 24 hours.",
+      "is_read": false,
+      "created_at": "2026-06-24T19:32:12.881Z",
+      "is_demo": true,
+      "expires_at": "2026-06-25T19:32:12.880Z"
+    },
+    {
+      "id": "notif-wi795nfes",
+      "user_id": "u-free-seed",
+      "title": "Demo Seeding Completed 💡",
+      "message": "Realistic analysis records, reports, and activity logs have been seeded. They will expire in 24 hours.",
+      "is_read": false,
+      "created_at": "2026-06-24T19:32:12.882Z"
     }
   ]
 }
