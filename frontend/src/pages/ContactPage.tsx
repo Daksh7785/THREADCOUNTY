@@ -25,7 +25,7 @@ export const ContactPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('${API_URL}/contact', {
+      const res = await fetch(`${API_URL}/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
