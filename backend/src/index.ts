@@ -38,9 +38,15 @@ app.use(express.urlencoded({ extended: true }));
 // Global structured request logger
 app.use(requestLogger);
 
-// Serve uploaded images statically
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-app.use('/backend/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Serve uploaded images statically (supporting writable /tmp/uploads and packaged read-only assets)
+const UPLOADS_DIR_TMP = path.join('/tmp', 'uploads');
+const UPLOADS_DIR_READONLY = path.join(__dirname, '..', 'uploads');
+
+app.use('/uploads', express.static(UPLOADS_DIR_TMP));
+app.use('/uploads', express.static(UPLOADS_DIR_READONLY));
+
+app.use('/backend/uploads', express.static(UPLOADS_DIR_TMP));
+app.use('/backend/uploads', express.static(UPLOADS_DIR_READONLY));
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
