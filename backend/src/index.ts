@@ -40,6 +40,7 @@ app.use(requestLogger);
 
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/backend/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
