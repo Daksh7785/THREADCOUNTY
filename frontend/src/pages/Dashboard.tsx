@@ -16,6 +16,8 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [hasDemoData, setHasDemoData] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -33,11 +35,51 @@ export const Dashboard: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+        const hasDemo = data.recentReports?.some((r: any) => r.is_demo) || false;
+        setHasDemoData(hasDemo);
       }
     } catch (err) {
       console.error('Error loading dashboard stats:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoadDemo = async () => {
+    setDemoLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/demo/generate', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        await loadStats();
+      }
+    } catch (err) {
+      console.error('Error seeding demo data:', err);
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
+  const handleClearDemo = async () => {
+    setDemoLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/demo/clear', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        await loadStats();
+      }
+    } catch (err) {
+      console.error('Error clearing demo data:', err);
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -101,6 +143,42 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="absolute right-6 bottom-[-20px] opacity-15 pointer-events-none">
           <FileBarChart className="h-44 w-44" />
+        </div>
+      </div>
+
+      {/* Demo Data Control Banner */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-indigo-100 bg-indigo-50/40 dark:border-indigo-950/40 dark:bg-indigo-950/20 text-xs sm:text-sm">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-2.5 w-2.5 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse"></span>
+          <p className="text-slate-600 dark:text-slate-300">
+            {hasDemoData ? (
+              <>
+                <strong>Demo Session Active:</strong> 6 realistic fabric reports are seeded. They will auto-expire and purge in 24 hours.
+              </>
+            ) : (
+              <>
+                <strong>Showcase Mode:</strong> Initialize the dashboard with a set of 6 preloaded fabric scans to experience the platform instantly.
+              </>
+            )}
+          </p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleLoadDemo}
+            disabled={demoLoading}
+            className="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold rounded-lg transition-colors shadow-sm text-xs cursor-pointer"
+          >
+            {demoLoading ? 'Processing...' : hasDemoData ? 'Regenerate Demo' : 'Load Demo Data'}
+          </button>
+          {hasDemoData && (
+            <button
+              onClick={handleClearDemo}
+              disabled={demoLoading}
+              className="flex-1 sm:flex-none px-4 py-2 border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 font-bold rounded-lg transition-colors text-xs cursor-pointer"
+            >
+              Clear Demo
+            </button>
+          )}
         </div>
       </div>
 
@@ -333,7 +411,14 @@ export const Dashboard: React.FC = () => {
                         <div className="h-10 w-12 rounded bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800"></div>
                       )}
                     </td>
-                    <td className="py-3 font-semibold">{rep.fabric_type}</td>
+                    <td className="py-3 font-semibold">
+                      {rep.fabric_type}
+                      {rep.is_demo && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold text-[9px] uppercase tracking-wider">
+                          Demo
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3 text-center">{rep.warp_count}</td>
                     <td className="py-3 text-center">{rep.weft_count}</td>
                     <td className="py-3 text-center font-bold text-indigo-600 dark:text-indigo-400">{rep.thread_density}</td>
