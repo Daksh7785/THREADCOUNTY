@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -24,7 +25,7 @@ export const ForgotPasswordPage: React.FC = () => {
     if (!email) { setError('Please input your email address.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
+      const res = await fetch('${API_URL}/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -48,7 +49,7 @@ export const ForgotPasswordPage: React.FC = () => {
     if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const res = await fetch('${API_URL}/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code, newPassword })
