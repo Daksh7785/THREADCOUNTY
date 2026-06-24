@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -28,7 +29,7 @@ export const AnalysisResultPage: React.FC = () => {
 
   const loadReport = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/report/${id}`, {
+      const res = await fetch(`${API_URL}/report/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -100,7 +101,7 @@ export const AnalysisResultPage: React.FC = () => {
 
           {/* Download Print/PDF View */}
           <a
-            href={`http://localhost:5000/api/report/${report.id}/download?format=pdf&token=${token}`}
+            href={`${API_URL}/report/${report.id}/download?format=pdf&token=${token}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-all shadow shadow-indigo-600/10"
@@ -138,7 +139,7 @@ export const AnalysisResultPage: React.FC = () => {
           <div className="aspect-[4/3] w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 relative flex items-center justify-center">
             {upload ? (
               <img 
-                src={`http://localhost:5000/${upload.file_path}`} 
+                src={`${API}/${upload.file_path}`} 
                 alt={upload.original_name} 
                 className="h-full w-full object-cover" 
               />
