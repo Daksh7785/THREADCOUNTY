@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -73,7 +74,7 @@ export const HistoryPage: React.FC = () => {
 
   const loadReports = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/report/list', {
+      const res = await fetch('${API_URL}/report/list', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -97,7 +98,7 @@ export const HistoryPage: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/report/${id}`, {
+      const res = await fetch(`${API_URL}/report/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -248,7 +249,7 @@ export const HistoryPage: React.FC = () => {
               <div className="aspect-[4/3] w-full bg-slate-950 relative overflow-hidden flex items-center justify-center border-b">
                 {rep.upload ? (
                   <img 
-                    src={`http://localhost:5000/${rep.upload.file_path}`} 
+                    src={`${API}/${rep.upload.file_path}`} 
                     alt={rep.upload.original_name} 
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
@@ -299,7 +300,7 @@ export const HistoryPage: React.FC = () => {
                   <div className="flex gap-1">
                     {/* Download */}
                     <a 
-                      href={`http://localhost:5000/api/report/${rep.id}/download?format=json&token=${token}`}
+                      href={`${API_URL}/report/${rep.id}/download?format=json&token=${token}`}
                       onClick={(e) => e.stopPropagation()}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800/40"
                       title="Download JSON Data"
