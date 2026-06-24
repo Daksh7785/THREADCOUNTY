@@ -33,7 +33,7 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       // 1. Load Stats
-      const statsRes = await fetch('${API_URL}/admin/stats', {
+      const statsRes = await fetch(`${API_URL}/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (statsRes.ok) {
@@ -42,7 +42,7 @@ export const AdminDashboard: React.FC = () => {
       }
 
       // 2. Load Users
-      const usersRes = await fetch('${API_URL}/admin/users', {
+      const usersRes = await fetch(`${API_URL}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (usersRes.ok) {
@@ -51,7 +51,7 @@ export const AdminDashboard: React.FC = () => {
       }
 
       // 3. Load Contact Messages
-      const msgRes = await fetch('${API_URL}/contact', {
+      const msgRes = await fetch(`${API_URL}/contact`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (msgRes.ok) {
