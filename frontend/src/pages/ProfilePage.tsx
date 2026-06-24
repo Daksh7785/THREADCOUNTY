@@ -46,6 +46,9 @@ export const ProfilePage: React.FC = () => {
   
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoSuccess, setDemoSuccess] = useState('');
+  const [demoError, setDemoError] = useState('');
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +131,56 @@ export const ProfilePage: React.FC = () => {
       setPasswordError(err.message || 'Incorrect current password.');
     } finally {
       setLoadingPassword(false);
+    }
+  };
+
+  const handleLoadDemo = async () => {
+    setDemoLoading(true);
+    setDemoSuccess('');
+    setDemoError('');
+    try {
+      const res = await fetch('http://localhost:5000/api/demo/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDemoSuccess('Demo session successfully seeded! Go to Dashboard to check.');
+      } else {
+        setDemoError(data.error || 'Failed to seed demo data.');
+      }
+    } catch (err) {
+      setDemoError('Could not connect to the server.');
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
+  const handleClearDemo = async () => {
+    setDemoLoading(true);
+    setDemoSuccess('');
+    setDemoError('');
+    try {
+      const res = await fetch('http://localhost:5000/api/demo/clear', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setDemoSuccess('All temporary demo records successfully cleared.');
+      } else {
+        setDemoError(data.error || 'Failed to clear demo data.');
+      }
+    } catch (err) {
+      setDemoError('Could not connect to the server.');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -347,6 +400,45 @@ export const ProfilePage: React.FC = () => {
                 {loadingProfile ? 'Saving Changes...' : 'Save Profile Details'}
               </button>
             </form>
+          </div>
+
+          {/* Demo Data Management Card */}
+          <div className="glass-panel border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <Activity className="h-5 w-5 text-indigo-500" />
+              <h3 className="font-bold text-sm">Demo Session Controls</h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Need to showcase ThreadCounty with populated data? Generate 6 realistic mock fabric analyses and reports spread over 15 days. Demo data will be automatically cleaned up after 24 hours.
+            </p>
+            {demoSuccess && (
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{demoSuccess}</span>
+              </div>
+            )}
+            {demoError && (
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{demoError}</span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleLoadDemo}
+                disabled={demoLoading}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold rounded-lg text-xs transition-all shadow cursor-pointer"
+              >
+                {demoLoading ? 'Processing...' : 'Seed Sandbox Demo Data'}
+              </button>
+              <button
+                onClick={handleClearDemo}
+                disabled={demoLoading}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 font-bold rounded-lg text-xs transition-all cursor-pointer"
+              >
+                Clear All Demo Data
+              </button>
+            </div>
           </div>
         </div>
       )}
