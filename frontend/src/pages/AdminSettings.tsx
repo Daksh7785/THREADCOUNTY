@@ -1,8 +1,9 @@
+import { API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Settings, Save, ToggleLeft, ToggleRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-const API = '${API}';
+
 
 interface PlatformSettings {
   planLimits: {
