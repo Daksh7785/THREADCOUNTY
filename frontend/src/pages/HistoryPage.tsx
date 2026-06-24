@@ -299,7 +299,7 @@ export const HistoryPage: React.FC = () => {
                   <div className="flex gap-1">
                     {/* Download */}
                     <a 
-                      href={`http://localhost:5000/api/report/${rep.id}/download?format=json`}
+                      href={`http://localhost:5000/api/report/${rep.id}/download?format=json&token=${token}`}
                       onClick={(e) => e.stopPropagation()}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-800/40"
                       title="Download JSON Data"
