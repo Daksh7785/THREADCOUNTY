@@ -74,7 +74,7 @@ export const HistoryPage: React.FC = () => {
 
   const loadReports = async () => {
     try {
-      const res = await fetch('${API_URL}/report/list', {
+      const res = await fetch(`${API_URL}/report/list`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
