@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -144,7 +145,7 @@ export const CheckoutPage: React.FC = () => {
       await new Promise(r => setTimeout(r, 2000));
 
       // MOCK PAYMENT — NOT REAL — calls backend to update plan + generate invoice
-      const res = await fetch('http://localhost:5000/api/checkout', {
+      const res = await fetch('${API_URL}/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +223,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               {invoice && (
                 <a
-                  href={`http://localhost:5000/api/checkout/invoice/${invoice.id}/download?token=${token}`}
+                  href={`${API_URL}/checkout/invoice/${invoice.id}/download?token=${token}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold hover:border-indigo-400 transition-all"
