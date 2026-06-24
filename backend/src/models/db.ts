@@ -334,7 +334,11 @@ class ThreadCountyDatabase {
   }
 
   private saveLocalDb() {
-    fs.writeFileSync(DB_FILE, JSON.stringify(this.localData, null, 2), 'utf-8');
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(this.localData, null, 2), 'utf-8');
+    } catch (err) {
+      console.warn('[Database] Failed to write db.json to disk (expected on read-only serverless environments like Vercel):', err);
+    }
   }
 
   // --- PUBLIC API WRAPPER METHODS ---
