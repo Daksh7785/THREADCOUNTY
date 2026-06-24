@@ -222,7 +222,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               {invoice && (
                 <a
-                  href={`http://localhost:5000/api/checkout/invoice/${invoice.id}/download`}
+                  href={`http://localhost:5000/api/checkout/invoice/${invoice.id}/download?token=${token}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold hover:border-indigo-400 transition-all"
