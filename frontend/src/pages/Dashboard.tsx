@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +28,7 @@ export const Dashboard: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/dashboard/stats', {
+      const res = await fetch('${API_URL}/dashboard/stats', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -48,7 +49,7 @@ export const Dashboard: React.FC = () => {
   const handleLoadDemo = async () => {
     setDemoLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/demo/generate', {
+      const res = await fetch('${API_URL}/demo/generate', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -67,7 +68,7 @@ export const Dashboard: React.FC = () => {
   const handleClearDemo = async () => {
     setDemoLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/demo/clear', {
+      const res = await fetch('${API_URL}/demo/clear', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -403,7 +404,7 @@ export const Dashboard: React.FC = () => {
                     <td className="py-3">
                       {rep.upload ? (
                         <img 
-                          src={`http://localhost:5000/${rep.upload.file_path}`} 
+                          src={`${API}/${rep.upload.file_path}`} 
                           alt={rep.upload.original_name} 
                           className="h-10 w-12 rounded object-cover border border-slate-200 dark:border-slate-800"
                         />
