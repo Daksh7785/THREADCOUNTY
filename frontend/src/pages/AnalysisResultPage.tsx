@@ -100,7 +100,7 @@ export const AnalysisResultPage: React.FC = () => {
 
           {/* Download Print/PDF View */}
           <a
-            href={`http://localhost:5000/api/report/${report.id}/download?format=pdf`}
+            href={`http://localhost:5000/api/report/${report.id}/download?format=pdf&token=${token}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-all shadow shadow-indigo-600/10"
