@@ -1,3 +1,4 @@
+import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -32,7 +33,7 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       // 1. Load Stats
-      const statsRes = await fetch('http://localhost:5000/api/admin/stats', {
+      const statsRes = await fetch('${API_URL}/admin/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (statsRes.ok) {
@@ -41,7 +42,7 @@ export const AdminDashboard: React.FC = () => {
       }
 
       // 2. Load Users
-      const usersRes = await fetch('http://localhost:5000/api/admin/users', {
+      const usersRes = await fetch('${API_URL}/admin/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (usersRes.ok) {
@@ -50,7 +51,7 @@ export const AdminDashboard: React.FC = () => {
       }
 
       // 3. Load Contact Messages
-      const msgRes = await fetch('http://localhost:5000/api/contact', {
+      const msgRes = await fetch('${API_URL}/contact', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (msgRes.ok) {
@@ -72,7 +73,7 @@ export const AdminDashboard: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handlePlanChange = async (userId: string, plan: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/plan`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}/plan`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +127,7 @@ export const AdminDashboard: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
