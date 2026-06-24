@@ -43,7 +43,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('${API_URL}/dashboard/stats', {
+      const res = await fetch(`${API_URL}/dashboard/stats`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
