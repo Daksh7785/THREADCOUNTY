@@ -13,6 +13,8 @@ export interface Profile {
   plan: 'Free' | 'Student' | 'Professional' | 'Enterprise';
   storage_used: number; // in bytes
   created_at: string;
+  is_demo?: boolean;
+  expires_at?: string;
 }
 
 export interface Upload {
@@ -23,6 +25,8 @@ export interface Upload {
   file_size: number;
   file_path: string;
   created_at: string;
+  is_demo?: boolean;
+  expires_at?: string;
 }
 
 export interface Report {
@@ -36,6 +40,8 @@ export interface Report {
   confidence: number; // e.g. 0.96
   suggestions: string[];
   created_at: string;
+  is_demo?: boolean;
+  expires_at?: string;
 }
 
 export interface ContactMessage {
@@ -45,6 +51,8 @@ export interface ContactMessage {
   subject: string;
   message: string;
   created_at: string;
+  is_demo?: boolean;
+  expires_at?: string;
 }
 
 export interface Notification {
@@ -54,6 +62,8 @@ export interface Notification {
   message: string;
   is_read: boolean;
   created_at: string;
+  is_demo?: boolean;
+  expires_at?: string;
 }
 
 // Local db file path
@@ -817,6 +827,289 @@ class ThreadCountyDatabase {
       const { data, error } = await this.supabase!.from('uploads').select('*');
       if (error) return [];
       return data;
+    }
+  }
+
+  // --- DEMO DATA SEEDING & AUTO-CLEANUP ---
+  public async generateDemoDataForUser(userId: string, durationHours = 24): Promise<void> {
+    const expiresAt = new Date(Date.now() + durationHours * 3600 * 1000).toISOString();
+    
+    // 1. Clear any existing demo records for this user first
+    if (this.isLocalMode) {
+      this.localData.uploads = this.localData.uploads.filter(u => !(u.user_id === userId && u.is_demo));
+      this.localData.reports = this.localData.reports.filter(r => !(r.user_id === userId && r.is_demo));
+      this.localData.notifications = this.localData.notifications.filter(n => !(n.user_id === userId && n.is_demo));
+    } else {
+      await this.supabase!.from('reports').delete().eq('user_id', userId).eq('is_demo', true);
+      await this.supabase!.from('uploads').delete().eq('user_id', userId).eq('is_demo', true);
+      await this.supabase!.from('notifications').delete().eq('user_id', userId).eq('is_demo', true);
+    }
+
+    // 2. Define the 6 realistic fabric analysis templates
+    const templates = [
+      {
+        filename: 'sample_denim.png',
+        original_name: 'denim_raw_500x.png',
+        warp_count: 68,
+        weft_count: 56,
+        fabric_type: 'Denim / Twill Weave',
+        confidence: 0.96,
+        daysAgo: 14,
+        suggestions: [
+          'Warp tension is slightly high; reduce by 2% to avoid fabric curling.',
+          'Weft alignment shows high consistency. Excellent weave uniformity.',
+          'Optimal yarn count detected for 12oz heavy denim manufacturing.'
+        ]
+      },
+      {
+        filename: 'sample_linen.png',
+        original_name: 'linen_blend.png',
+        warp_count: 42,
+        weft_count: 44,
+        fabric_type: 'Linen / Plain Weave',
+        confidence: 0.94,
+        daysAgo: 11,
+        suggestions: [
+          'Plain weave structure verified with standard 1:1 interlacing.',
+          'Warp yarn thickness variation is within 3% tolerance.',
+          'Recommended for lightweight summer shirting.'
+        ]
+      },
+      {
+        filename: 'sample_cotton.png',
+        original_name: 'combed_cotton_180.png',
+        warp_count: 92,
+        weft_count: 88,
+        fabric_type: 'Cotton / Plain Weave',
+        confidence: 0.97,
+        daysAgo: 8,
+        suggestions: [
+          'High quality combed cotton thread profile detected.',
+          'Warp/weft ratio close to 1:1, offering optimal tensile strength.',
+          'Suitable for medium-weight shirts and home textiles.'
+        ]
+      },
+      {
+        filename: 'sample_silk.png',
+        original_name: 'mulberry_silk.png',
+        warp_count: 120,
+        weft_count: 110,
+        fabric_type: 'Silk / Satin Weave',
+        confidence: 0.99,
+        daysAgo: 5,
+        suggestions: [
+          'Extremely fine thread profile with high density Satin structure.',
+          'Surface luster index is optimal. No snags or thread breaks detected.',
+          'Ideal for premium sleepwear and luxury garments.'
+        ]
+      },
+      {
+        filename: 'sample_wool.png',
+        original_name: 'merino_wool_blend.png',
+        warp_count: 32,
+        weft_count: 28,
+        fabric_type: 'Wool / Twill Weave',
+        confidence: 0.92,
+        daysAgo: 2,
+        suggestions: [
+          'Low density coarse fiber weave verified. Standard wool twill structure.',
+          'Pilling risk is low based on fiber surface density analysis.',
+          'Suitable for winter outerwear and blankets.'
+        ]
+      },
+      {
+        filename: 'sample_cotton.png',
+        original_name: 'canvas_heavy.png',
+        warp_count: 55,
+        weft_count: 52,
+        fabric_type: 'Cotton / Canvas Weave',
+        confidence: 0.95,
+        daysAgo: 0,
+        suggestions: [
+          'Heavy cotton canvas structure verified.',
+          'Warp count is stable, weft shows minor alignment shift of 1.5%.',
+          'Highly recommended for heavy duty bags, sails, or upholstery.'
+        ]
+      }
+    ];
+
+    // 3. Insert uploads and reports
+    let totalSeededSize = 0;
+    for (const t of templates) {
+      const uploadId = 'up-demo-' + Math.random().toString(36).substr(2, 9);
+      const reportId = 'rep-demo-' + Math.random().toString(36).substr(2, 9);
+      const createdAt = new Date(Date.now() - t.daysAgo * 24 * 3600 * 1000).toISOString();
+      const fileSize = Math.floor(500000 + Math.random() * 800000); // 500kb to 1.3mb
+      totalSeededSize += fileSize;
+
+      const upload: Upload = {
+        id: uploadId,
+        user_id: userId,
+        filename: t.filename,
+        original_name: t.original_name,
+        file_size: fileSize,
+        file_path: `backend/uploads/${t.filename}`,
+        created_at: createdAt,
+        is_demo: true,
+        expires_at: expiresAt
+      };
+
+      const report: Report = {
+        id: reportId,
+        upload_id: uploadId,
+        user_id: userId,
+        warp_count: t.warp_count,
+        weft_count: t.weft_count,
+        thread_density: t.warp_count + t.weft_count,
+        fabric_type: t.fabric_type,
+        confidence: t.confidence,
+        suggestions: t.suggestions,
+        created_at: createdAt,
+        is_demo: true,
+        expires_at: expiresAt
+      };
+
+      if (this.isLocalMode) {
+        this.localData.uploads.push(upload);
+        this.localData.reports.push(report);
+      } else {
+        await this.supabase!.from('uploads').insert([upload]);
+        await this.supabase!.from('reports').insert([report]);
+      }
+    }
+
+    // 4. Insert Notifications
+    const notifications = [
+      { title: 'Welcome to ThreadCounty! 🎉', message: 'Explore automated thread density and warp/weft analysis by uploading your first fabric image.', daysAgo: 14 },
+      { title: 'Demo Analysis Ready', message: 'Your analysis report for denim_raw_500x.png has been generated successfully.', daysAgo: 14 },
+      { title: 'Demo Analysis Ready', message: 'Your analysis report for linen_blend.png has been generated successfully.', daysAgo: 11 },
+      { title: 'Invoice Generated', message: 'Your monthly statement is ready for download in your billing settings.', daysAgo: 5 },
+      { title: 'Demo Session Active 💡', message: `Welcome to the test drive! 6 sample reports have been seeded. Note that these records will auto-expire and purge in ${durationHours} hours.`, daysAgo: 0 }
+    ];
+
+    for (const n of notifications) {
+      const notifId = 'notif-demo-' + Math.random().toString(36).substr(2, 9);
+      const createdAt = new Date(Date.now() - n.daysAgo * 24 * 3600 * 1000).toISOString();
+
+      const notif: Notification = {
+        id: notifId,
+        user_id: userId,
+        title: n.title,
+        message: n.message,
+        is_read: n.daysAgo > 0,
+        created_at: createdAt,
+        is_demo: true,
+        expires_at: expiresAt
+      };
+
+      if (this.isLocalMode) {
+        this.localData.notifications.push(notif);
+      } else {
+        await this.supabase!.from('notifications').insert([notif]);
+      }
+    }
+
+    // 5. Update user's storage quota
+    if (this.isLocalMode) {
+      const idx = this.localData.profiles.findIndex(p => p.id === userId);
+      if (idx !== -1) {
+        this.localData.profiles[idx].storage_used = this.localData.uploads
+          .filter(u => u.user_id === userId)
+          .reduce((sum, u) => sum + u.file_size, 0);
+      }
+      this.saveLocalDb();
+    } else {
+      const uploads = await this.getUploadsByUser(userId);
+      const newStorageUsed = uploads.reduce((sum, u) => sum + u.file_size, 0);
+      await this.supabase!
+        .from('profiles')
+        .update({ storage_used: newStorageUsed })
+        .eq('id', userId);
+    }
+  }
+
+  public async cleanupExpiredDemoData(): Promise<void> {
+    const now = new Date().toISOString();
+    console.log(`[Demo Worker] Checking for expired demo data at ${now}...`);
+
+    if (this.isLocalMode) {
+      // 1. Gather all uploads slated for deletion to clean up any files (if not standard templates)
+      const expiredUploads = this.localData.uploads.filter(u => u.is_demo && u.expires_at && u.expires_at <= now);
+      
+      for (const u of expiredUploads) {
+        // Only unlink if it's not a shared base sample asset
+        if (u.filename && !u.filename.startsWith('sample_')) {
+          try {
+            const absolutePath = path.resolve(u.file_path);
+            if (fs.existsSync(absolutePath)) {
+              fs.unlinkSync(absolutePath);
+              console.log(`[Demo Worker] Unlinked expired file: ${u.file_path}`);
+            }
+          } catch (e) {
+            console.error(`[Demo Worker] Failed to unlink file ${u.file_path}:`, e);
+          }
+        }
+      }
+
+      // 2. Perform filters
+      const userIdsToRecalculate = new Set<string>();
+      expiredUploads.forEach(u => userIdsToRecalculate.add(u.user_id));
+
+      this.localData.uploads = this.localData.uploads.filter(u => !(u.is_demo && u.expires_at && u.expires_at <= now));
+      this.localData.reports = this.localData.reports.filter(r => !(r.is_demo && r.expires_at && r.expires_at <= now));
+      this.localData.notifications = this.localData.notifications.filter(n => !(n.is_demo && n.expires_at && n.expires_at <= now));
+      this.localData.contact_messages = this.localData.contact_messages.filter(m => !(m.is_demo && m.expires_at && m.expires_at <= now));
+      
+      // Also filter out any temporary demo users
+      const expiredUsers = this.localData.profiles.filter(p => p.is_demo && p.expires_at && p.expires_at <= now);
+      for (const p of expiredUsers) {
+        delete this.localData.users[p.id];
+        console.log(`[Demo Worker] Deleted expired demo user profile and auth: ${p.email}`);
+      }
+      this.localData.profiles = this.localData.profiles.filter(p => !(p.is_demo && p.expires_at && p.expires_at <= now));
+
+      // 3. Recalculate storage for affected users
+      userIdsToRecalculate.forEach(uid => {
+        const idx = this.localData.profiles.findIndex(p => p.id === uid);
+        if (idx !== -1) {
+          this.localData.profiles[idx].storage_used = this.localData.uploads
+            .filter(u => u.user_id === uid)
+            .reduce((sum, u) => sum + u.file_size, 0);
+        }
+      });
+
+      this.saveLocalDb();
+      console.log(`[Demo Worker] Completed local cleanup. Purged ${expiredUploads.length} uploads.`);
+    } else {
+      // Supabase cleanups (cascade deleted triggers or sequential deletes)
+      const { data: expiredReports } = await this.supabase!
+        .from('reports')
+        .select('id, upload_id, user_id')
+        .eq('is_demo', true)
+        .lte('expires_at', now);
+
+      if (expiredReports && expiredReports.length > 0) {
+        const reportIds = expiredReports.map(r => r.id);
+        const uploadIds = expiredReports.map(r => r.upload_id);
+        const userIds = Array.from(new Set(expiredReports.map(r => r.user_id)));
+
+        await this.supabase!.from('reports').delete().in('id', reportIds);
+        await this.supabase!.from('uploads').delete().in('id', uploadIds);
+        await this.supabase!.from('notifications').delete().eq('is_demo', true).lte('expires_at', now);
+        await this.supabase!.from('contact_messages').delete().eq('is_demo', true).lte('expires_at', now);
+        await this.supabase!.from('profiles').delete().eq('is_demo', true).lte('expires_at', now);
+
+        // Recalculate storage
+        for (const uid of userIds) {
+          const uploads = await this.getUploadsByUser(uid);
+          const newStorageUsed = uploads.reduce((sum, u) => sum + u.file_size, 0);
+          await this.supabase!
+            .from('profiles')
+            .update({ storage_used: newStorageUsed })
+            .eq('id', uid);
+        }
+        console.log(`[Demo Worker] Completed Supabase cleanup. Purged ${expiredReports.length} reports.`);
+      }
     }
   }
 }
