@@ -41,7 +41,7 @@ const FABRIC_SUGGESTIONS: { [key: string]: string[] } = {
 };
 
 // @route   POST /api/report/analyze
-// @desc    Analyze uploaded image & generate report
+// @desc    Analyze uploaded image & generate report using Gemini Vision AI
 router.post('/analyze', async (req: AuthRequest, res: Response) => {
   try {
     const { uploadId } = req.body;
@@ -67,58 +67,144 @@ router.post('/analyze', async (req: AuthRequest, res: Response) => {
        return;
     }
 
-    // Simulate AI Computer Vision processing (take 1.5 seconds)
-    // We determine results based on the original file name
-    const nameLower = upload.original_name.toLowerCase();
+    // ── Attempt Gemini Vision Analysis ──────────────────────────────────────
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+    let warp = 50, weft = 50, confidence = 0.92;
     let fabricType = 'Cotton / Plain Weave';
-    let warp = 50;
-    let weft = 50;
-    let confidence = 0.95;
+    let suggestions: string[] = [];
+    let usedGemini = false;
 
-    if (nameLower.includes('denim') || nameLower.includes('twill') || nameLower.includes('jeans')) {
-      fabricType = 'Denim / Twill Weave';
-      warp = 64 + Math.floor(Math.random() * 8); // 64 - 72
-      weft = 54 + Math.floor(Math.random() * 8); // 54 - 62
-      confidence = 0.96 + Math.random() * 0.03; // 0.96 - 0.99
-    } else if (nameLower.includes('linen') || nameLower.includes('slub')) {
-      fabricType = 'Linen / Plain Weave';
-      warp = 38 + Math.floor(Math.random() * 6); // 38 - 44
-      weft = 36 + Math.floor(Math.random() * 6); // 36 - 42
-      confidence = 0.92 + Math.random() * 0.04;
-    } else if (nameLower.includes('silk') || nameLower.includes('satin')) {
-      fabricType = 'Silk / Satin Weave';
-      warp = 140 + Math.floor(Math.random() * 20); // 140 - 160
-      weft = 110 + Math.floor(Math.random() * 20); // 110 - 130
-      confidence = 0.95 + Math.random() * 0.04;
-    } else if (nameLower.includes('canvas') || nameLower.includes('heavy') || nameLower.includes('basket')) {
-      fabricType = 'Canvas / Basket Weave';
-      warp = 28 + Math.floor(Math.random() * 6); // 28 - 34
-      weft = 26 + Math.floor(Math.random() * 6); // 26 - 32
-      confidence = 0.94 + Math.random() * 0.04;
-    } else {
-      // General random selection
-      const types = Object.keys(FABRIC_SUGGESTIONS);
-      fabricType = types[Math.floor(Math.random() * types.length)];
-      if (fabricType === 'Denim / Twill Weave') {
-        warp = 66; weft = 56;
-      } else if (fabricType === 'Linen / Plain Weave') {
-        warp = 40; weft = 38;
-      } else if (fabricType === 'Silk / Satin Weave') {
-        warp = 148; weft = 120;
-      } else if (fabricType === 'Canvas / Basket Weave') {
-        warp = 30; weft = 28;
-      } else {
-        warp = 48 + Math.floor(Math.random() * 12);
-        weft = 46 + Math.floor(Math.random() * 12);
+    if (GEMINI_API_KEY) {
+      try {
+        // Read the uploaded image file as base64
+        const fs = require('fs');
+        const path = require('path');
+
+        // Try multiple possible locations for the image
+        const possiblePaths = [
+          path.resolve(upload.file_path),
+          path.join('/tmp', 'uploads', upload.filename),
+          path.join(__dirname, '..', 'uploads', upload.filename),
+          path.join(__dirname, '..', '..', 'uploads', upload.filename)
+        ];
+
+        let imageBase64: string | null = null;
+        let mimeType = 'image/jpeg';
+
+        for (const p of possiblePaths) {
+          if (fs.existsSync(p)) {
+            const buffer = fs.readFileSync(p);
+            imageBase64 = buffer.toString('base64');
+            const ext = path.extname(upload.filename).toLowerCase();
+            mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+            break;
+          }
+        }
+
+        if (imageBase64) {
+          const geminiPrompt = `You are an expert textile quality control engineer analyzing a fabric microscope image.
+Analyze this fabric image and return ONLY a JSON object with these exact fields (no markdown, no explanation):
+{
+  "warp_count": <integer 20-200, threads per inch in vertical/warp direction>,
+  "weft_count": <integer 20-200, threads per inch in horizontal/weft direction>,
+  "fabric_type": <one of exactly: "Cotton / Plain Weave" | "Denim / Twill Weave" | "Linen / Plain Weave" | "Silk / Satin Weave" | "Wool / Twill Weave" | "Canvas / Basket Weave" | "Synthetic / Plain Weave">,
+  "confidence": <float 0.80-0.99>,
+  "suggestions": [<string>, <string>, <string>]
+}
+Base your analysis on visible thread patterns, weave structure, fiber texture, and thread density. The suggestions should be specific textile engineering quality control recommendations.`;
+
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+          const geminiBody = {
+            contents: [{
+              parts: [
+                { text: geminiPrompt },
+                { inline_data: { mime_type: mimeType, data: imageBase64 } }
+              ]
+            }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 500 }
+          };
+
+          const geminiRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geminiBody)
+          });
+
+          if (geminiRes.ok) {
+            const geminiData: any = await geminiRes.json();
+            const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            // Strip any markdown code fences
+            const jsonStr = rawText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(jsonStr);
+
+            warp = Math.max(20, Math.min(200, parseInt(parsed.warp_count) || 50));
+            weft = Math.max(20, Math.min(200, parseInt(parsed.weft_count) || 50));
+            fabricType = parsed.fabric_type || 'Cotton / Plain Weave';
+            confidence = Math.max(0.80, Math.min(0.99, parseFloat(parsed.confidence) || 0.92));
+            suggestions = Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 4) : [];
+            usedGemini = true;
+            console.log(`[Report] Gemini Vision analysis complete: ${fabricType} (${(confidence * 100).toFixed(0)}%)`);
+          }
+        } else {
+          console.warn('[Report] Image file not found for Gemini analysis, using heuristic fallback.');
+        }
+      } catch (geminiErr: any) {
+        console.error('[Report] Gemini Vision error, using heuristic fallback:', geminiErr.message);
       }
-      confidence = 0.91 + Math.random() * 0.07;
     }
 
-    const suggestions = FABRIC_SUGGESTIONS[fabricType] || [
-      'Fabric structure shows standard interlacing patterns.',
-      'Yarn density is consistent throughout the analyzed region.',
-      'Recommended for standard apparel production lines.'
-    ];
+    // ── Heuristic Fallback (if Gemini unavailable or file missing) ─────────
+    if (!usedGemini) {
+      const nameLower = upload.original_name.toLowerCase();
+
+      if (nameLower.includes('denim') || nameLower.includes('twill') || nameLower.includes('jeans')) {
+        fabricType = 'Denim / Twill Weave';
+        warp = 64 + Math.floor(Math.random() * 8);
+        weft = 54 + Math.floor(Math.random() * 8);
+        confidence = 0.96 + Math.random() * 0.03;
+      } else if (nameLower.includes('linen') || nameLower.includes('slub')) {
+        fabricType = 'Linen / Plain Weave';
+        warp = 38 + Math.floor(Math.random() * 6);
+        weft = 36 + Math.floor(Math.random() * 6);
+        confidence = 0.92 + Math.random() * 0.04;
+      } else if (nameLower.includes('silk') || nameLower.includes('satin')) {
+        fabricType = 'Silk / Satin Weave';
+        warp = 140 + Math.floor(Math.random() * 20);
+        weft = 110 + Math.floor(Math.random() * 20);
+        confidence = 0.95 + Math.random() * 0.04;
+      } else if (nameLower.includes('canvas') || nameLower.includes('heavy') || nameLower.includes('basket')) {
+        fabricType = 'Canvas / Basket Weave';
+        warp = 28 + Math.floor(Math.random() * 6);
+        weft = 26 + Math.floor(Math.random() * 6);
+        confidence = 0.94 + Math.random() * 0.04;
+      } else if (nameLower.includes('wool') || nameLower.includes('merino')) {
+        fabricType = 'Wool / Twill Weave';
+        warp = 30 + Math.floor(Math.random() * 8);
+        weft = 26 + Math.floor(Math.random() * 6);
+        confidence = 0.91 + Math.random() * 0.05;
+      } else {
+        const types = Object.keys(FABRIC_SUGGESTIONS);
+        fabricType = types[Math.floor(Math.random() * types.length)];
+        warp = 48 + Math.floor(Math.random() * 12);
+        weft = 46 + Math.floor(Math.random() * 12);
+        confidence = 0.91 + Math.random() * 0.07;
+      }
+
+      suggestions = FABRIC_SUGGESTIONS[fabricType] || [
+        'Fabric structure shows standard interlacing patterns.',
+        'Yarn density is consistent throughout the analyzed region.',
+        'Recommended for standard apparel production lines.'
+      ];
+    }
+
+    // Ensure suggestions are always populated
+    if (!suggestions || suggestions.length === 0) {
+      suggestions = FABRIC_SUGGESTIONS[fabricType] || [
+        'Fabric structure analysis complete.',
+        'Thread density is within acceptable manufacturing tolerance.',
+        'Recommended for standard apparel production lines.'
+      ];
+    }
 
     // Create report in db
     const report = await db.createReport(
@@ -135,13 +221,14 @@ router.post('/analyze', async (req: AuthRequest, res: Response) => {
     await db.createNotification(
       req.user!.id,
       'Fabric Analysis Complete',
-      `Analysis for ${upload.original_name} finished. Fabric Type: ${fabricType}.`
+      `Analysis for ${upload.original_name} finished. Fabric Type: ${fabricType}. Confidence: ${(confidence * 100).toFixed(0)}%.`
     );
 
     res.status(201).json({
       message: 'Analysis completed successfully.',
       report,
-      upload
+      upload,
+      aiPowered: usedGemini
     });
   } catch (error) {
     console.error('Analysis error:', error);

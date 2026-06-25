@@ -32,7 +32,10 @@ export const ForgotPasswordPage: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to request reset.');
-      setMessage('A reset code has been sent to your email. For testing use: 528491');
+      setMessage(data.message || 'A 6-digit reset code has been sent to your email. Check your inbox (and spam folder).');
+      if (data.devOtp) {
+        setMessage(`[Dev mode] Email delivery failed. OTP: ${data.devOtp}`);
+      }
       setStep(2);
     } catch (err: any) {
       setError(err.message || 'Unable to connect to auth server.');

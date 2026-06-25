@@ -17,6 +17,7 @@ import contactRouter from './routes/contact';
 import checkoutRouter from './routes/checkout';
 import adminSettingsRouter from './routes/adminSettings';
 import demoRouter from './routes/demo';
+import chatRouter from './routes/chat';
 import { requestLogger } from './middleware/logger';
 import { authRateLimiter, uploadRateLimiter, contactRateLimiter } from './middleware/rateLimiter';
 import db from './models/db';
@@ -117,11 +118,12 @@ app.use('/api/user', userRouter);
 app.use('/api/upload', uploadRateLimiter, uploadRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/admin/settings', adminSettingsRouter); // MUST be before /api/admin
 app.use('/api/admin', adminRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/checkout', checkoutRouter);
-app.use('/api/admin/settings', adminSettingsRouter);
 app.use('/api/demo', demoRouter);
+app.use('/api/chat', chatRouter);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
