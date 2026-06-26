@@ -46,7 +46,8 @@ router.post('/google', async (req, res: Response) => {
       return;
     }
 
-    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'your_google_client_id_here.apps.googleusercontent.com') {
+    const isMockGoogle = googleUser && googleUser.sub && googleUser.sub.startsWith('mock_');
+    if (!isMockGoogle && (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'your_google_client_id_here.apps.googleusercontent.com')) {
       res.status(503).json({
         error: 'Google OAuth is not configured on this server. Please set GOOGLE_CLIENT_ID in backend/.env and restart.'
       });

@@ -345,6 +345,14 @@
       "subject": "Automated Test",
       "message": "This is a message from the automated integration test suite.",
       "created_at": "2026-06-26T18:42:46.123Z"
+    },
+    {
+      "id": "msg-ap7bgabrh",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-26T18:51:34.014Z"
     }
   ],
   "notifications": [
@@ -448,6 +456,27 @@
         "targetUserEmail": "demo.free@threadcounty.app"
       },
       "timestamp": "2026-06-26T18:42:46.221Z"
+    },
+    {
+      "id": "audit-zn5ambmwy",
+      "admin_id": "u-admin-seed",
+      "action": "VIEW_USERS_LIST",
+      "details": {
+        "page": 1,
+        "limit": 2,
+        "total": 7
+      },
+      "timestamp": "2026-06-26T18:51:34.099Z"
+    },
+    {
+      "id": "audit-f5c2i3woi",
+      "admin_id": "u-admin-seed",
+      "action": "IMPERSONATE_USER",
+      "details": {
+        "targetUserId": "u-free-seed",
+        "targetUserEmail": "demo.free@threadcounty.app"
+      },
+      "timestamp": "2026-06-26T18:51:34.103Z"
     }
   ]
 }
