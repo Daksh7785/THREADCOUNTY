@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { randomUUID } from 'crypto';
 
 // --- DATABASE INTERFACES ---
 export interface Profile {
@@ -481,9 +482,8 @@ class ThreadCountyDatabase {
     }
   }
 
-  // Uploads
   public async createUpload(userId: string, filename: string, originalName: string, fileSize: number, filePath: string): Promise<Upload> {
-    const id = 'up-' + Math.random().toString(36).substr(2, 9);
+    const id = this.isLocalMode ? 'up-' + Math.random().toString(36).substr(2, 9) : randomUUID();
     const newUpload: Upload = {
       id,
       user_id: userId,
@@ -546,7 +546,7 @@ class ThreadCountyDatabase {
 
   // Reports
   public async createReport(uploadId: string, userId: string, warpCount: number, weftCount: number, fabricType: string, confidence: number, suggestions: string[]): Promise<Report> {
-    const id = 'rep-' + Math.random().toString(36).substr(2, 9);
+    const id = this.isLocalMode ? 'rep-' + Math.random().toString(36).substr(2, 9) : randomUUID();
     const newReport: Report = {
       id,
       upload_id: uploadId,
@@ -661,7 +661,7 @@ class ThreadCountyDatabase {
 
   // Contact Messages
   public async createContactMessage(name: string, email: string, subject: string, message: string): Promise<ContactMessage> {
-    const id = 'msg-' + Math.random().toString(36).substr(2, 9);
+    const id = this.isLocalMode ? 'msg-' + Math.random().toString(36).substr(2, 9) : randomUUID();
     const newMessage: ContactMessage = {
       id,
       name,
@@ -698,7 +698,7 @@ class ThreadCountyDatabase {
 
   // Notifications
   public async createNotification(userId: string, title: string, message: string): Promise<Notification> {
-    const id = 'notif-' + Math.random().toString(36).substr(2, 9);
+    const id = this.isLocalMode ? 'notif-' + Math.random().toString(36).substr(2, 9) : randomUUID();
     const newNotif: Notification = {
       id,
       user_id: userId,
@@ -940,8 +940,8 @@ class ThreadCountyDatabase {
     // 3. Insert uploads and reports
     let totalSeededSize = 0;
     for (const t of templates) {
-      const uploadId = 'up-demo-' + Math.random().toString(36).substr(2, 9);
-      const reportId = 'rep-demo-' + Math.random().toString(36).substr(2, 9);
+      const uploadId = this.isLocalMode ? 'up-demo-' + Math.random().toString(36).substr(2, 9) : randomUUID();
+      const reportId = this.isLocalMode ? 'rep-demo-' + Math.random().toString(36).substr(2, 9) : randomUUID();
       const createdAt = new Date(Date.now() - t.daysAgo * 24 * 3600 * 1000).toISOString();
       const fileSize = Math.floor(500000 + Math.random() * 800000); // 500kb to 1.3mb
       totalSeededSize += fileSize;
@@ -992,7 +992,7 @@ class ThreadCountyDatabase {
     ];
 
     for (const n of notifications) {
-      const notifId = 'notif-demo-' + Math.random().toString(36).substr(2, 9);
+      const notifId = this.isLocalMode ? 'notif-demo-' + Math.random().toString(36).substr(2, 9) : randomUUID();
       const createdAt = new Date(Date.now() - n.daysAgo * 24 * 3600 * 1000).toISOString();
 
       const notif: Notification = {
