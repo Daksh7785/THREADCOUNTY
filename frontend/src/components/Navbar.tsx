@@ -1,14 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon, Cpu, Menu, X } from 'lucide-react';
+import { Sun, Moon, Cpu, Menu, X, Globe } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [lang, setLang] = useState('en');
+
+  // Google Translate integration
+  useEffect(() => {
+    const addGoogleTranslate = () => {
+      if (document.getElementById('google-translate-script')) return;
+      const script = document.createElement('script');
+      script.id = 'google-translate-script';
+      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      document.body.appendChild(script);
+      (window as any).googleTranslateElementInit = () => {
+        new (window as any).google.translate.TranslateElement(
+          { pageLanguage: 'en', includedLanguages: 'en,es,fr,hi', autoDisplay: false },
+          'google_translate_element'
+        );
+      };
+    };
+    addGoogleTranslate();
+  }, []);
+
+  const changeLanguage = (langCode: string) => {
+    setLang(langCode);
+    const frame = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+    if (frame) {
+      frame.value = langCode;
+      frame.dispatchEvent(new Event('change'));
+    }
+  };
+
+  const LANGUAGES = [
+    { code: 'en', label: 'EN', flag: '🇺🇸' },
+    { code: 'es', label: 'ES', flag: '🇪🇸' },
+    { code: 'fr', label: 'FR', flag: '🇫🇷' },
+    { code: 'hi', label: 'HI', flag: '🇮🇳' },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 glass-panel border-b transition-all duration-300">
@@ -27,6 +62,8 @@ export const Navbar: React.FC = () => {
             <Link to="/" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">Home</Link>
             <Link to="/about" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">About</Link>
             <Link to="/pricing" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">Pricing</Link>
+            <Link to="/blog" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">Blog</Link>
+            <Link to="/forum" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">Forum</Link>
             <Link to="/faq" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">FAQs</Link>
             <Link to="/contact" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium">Contact</Link>
           </div>
@@ -40,6 +77,21 @@ export const Navbar: React.FC = () => {
             >
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
+
+            {/* Language Selector */}
+            <div className="relative">
+              <select
+                value={lang}
+                onChange={(e) => changeLanguage(e.target.value)}
+                className="appearance-none pl-7 pr-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold cursor-pointer border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+                {LANGUAGES.map(l => (
+                  <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+                ))}
+              </select>
+              <Globe className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            </div>
+            <div id="google_translate_element" className="hidden"></div>
 
             {user ? (
               <>
