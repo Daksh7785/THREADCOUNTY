@@ -105,4 +105,67 @@ router.post('/', authenticateToken as any, checkUploadLimit as any, checkStorage
   });
 });
 
+// @route   GET /api/upload/raw/:id
+// @desc    Get raw uploaded image (handles both disk and KV store fallback)
+router.get('/raw/:id', async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const uploadRecord = await db.getUploadById(id);
+    if (!uploadRecord) {
+      res.status(404).json({ error: 'Image not found' });
+      return;
+    }
+
+    // 1. Check if it's already a base64 dataUrl
+    if (uploadRecord.file_path.startsWith('data:')) {
+      const match = uploadRecord.file_path.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        const contentType = match[1];
+        const buffer = Buffer.from(match[2], 'base64');
+        res.setHeader('Content-Type', contentType);
+        res.send(buffer);
+        return;
+      }
+    }
+
+    // 2. Check if file exists on local disk
+    const diskPath = path.join(UPLOADS_DIR, uploadRecord.filename);
+    if (fs.existsSync(diskPath)) {
+      res.sendFile(diskPath);
+      return;
+    }
+
+    // 3. Fallback: Fetch from KV store
+    const KV_IMG_URL = `https://kvdb.io/tcdakshbucket92929292/img_${id}`;
+    try {
+      const kvRes = await fetch(KV_IMG_URL);
+      if (kvRes.ok) {
+        const dataUrl = await kvRes.text();
+        const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          const contentType = match[1];
+          const buffer = Buffer.from(match[2], 'base64');
+          res.setHeader('Content-Type', contentType);
+          res.send(buffer);
+          return;
+        }
+      }
+    } catch (kvErr) {
+      console.error('[Upload Route] Failed to fetch image from KV fallback:', kvErr);
+    }
+
+    // 4. Second fallback: check sample images in read-only dir
+    const samplePath = path.join(__dirname, '..', '..', 'uploads', uploadRecord.filename);
+    if (fs.existsSync(samplePath)) {
+      res.sendFile(samplePath);
+      return;
+    }
+
+    res.status(404).json({ error: 'Image not found' });
+  } catch (err) {
+    console.error('[Upload Route] Error retrieving image:', err);
+    res.status(500).json({ error: 'Error retrieving image' });
+  }
+});
+
 export default router;

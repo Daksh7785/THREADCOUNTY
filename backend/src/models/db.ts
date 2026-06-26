@@ -116,6 +116,9 @@ class ThreadCountyDatabase {
     audit_logs: []
   };
 
+  private dataLoaded = false;
+  private isInitializing = false;
+
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
@@ -135,13 +138,7 @@ class ThreadCountyDatabase {
     }
 
     if (this.isLocalMode) {
-      this.initLocalDb();
-      // Self-heal check: ensure the new demo credentials exist
-      const hasNewDemo = this.localData.profiles.some(p => p.email === 'admin@threadcounty.app');
-      if (!hasNewDemo) {
-        console.log('[Database] Old or empty seed data detected. Re-seeding with updated demo accounts...');
-        this.createSeedData();
-      }
+      this.ensureDataLoaded().catch(console.error);
     }
   }
 
@@ -149,8 +146,39 @@ class ThreadCountyDatabase {
     return this.isLocalMode ? 'local' : 'supabase';
   }
 
+  public async ensureDataLoaded() {
+    if (this.dataLoaded) return;
+    if (this.isInitializing) {
+      while (this.isInitializing) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      return;
+    }
+
+    this.isInitializing = true;
+    try {
+      await this.initLocalDb();
+      this.dataLoaded = true;
+    } finally {
+      this.isInitializing = false;
+    }
+  }
+
   // --- LOCAL SANDBOX INITIALIZATION ---
-  private initLocalDb() {
+  private async initLocalDb() {
+    const KV_DB_URL = 'https://kvdb.io/tcdakshbucket92929292/db';
+    try {
+      const res = await fetch(KV_DB_URL);
+      if (res.ok) {
+        const text = await res.text();
+        this.localData = JSON.parse(text);
+        console.log('[Database] Loaded persistent database from KV store.');
+        return;
+      }
+    } catch (err) {
+      console.warn('[Database] Failed to load from KV store:', err);
+    }
+
     if (!process.env.VERCEL && !fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
@@ -372,8 +400,26 @@ class ThreadCountyDatabase {
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.localData, null, 2), 'utf-8');
     } catch (err) {
-      console.warn('[Database] Failed to write db.json to disk (expected on read-only serverless environments like Vercel):', err);
+      console.warn('[Database] Failed to write db.json to disk:', err);
     }
+    
+    // Save to KV store asynchronously
+    const KV_DB_URL = 'https://kvdb.io/tcdakshbucket92929292/db';
+    fetch(KV_DB_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(this.localData)
+    }).then((res: any) => {
+      if (res.ok) {
+        console.log('[Database] Successfully saved database to KV store.');
+      } else {
+        console.warn('[Database] Failed to save database to KV store:', res.statusText);
+      }
+    }).catch((err: any) => {
+      console.warn('[Database] Error saving database to KV store:', err);
+    });
   }
 
   // --- PUBLIC API WRAPPER METHODS ---
@@ -518,13 +564,28 @@ class ThreadCountyDatabase {
 
   public async createUpload(userId: string, filename: string, originalName: string, fileSize: number, filePath: string): Promise<Upload> {
     const id = this.isLocalMode ? 'up-' + Math.random().toString(36).substr(2, 9) : randomUUID();
+    
+    let dbFilePath = filePath;
+    if (this.isLocalMode && filePath.startsWith('data:')) {
+      // Save base64 image data to a separate KV key asynchronously
+      const KV_IMG_URL = `https://kvdb.io/tcdakshbucket92929292/img_${id}`;
+      fetch(KV_IMG_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'text/plain' },
+        body: filePath
+      }).catch((err: any) => console.error('[Database] Failed to save image to KV:', err));
+      
+      // Store reference path in DB instead of the giant base64 string
+      dbFilePath = `api/upload/raw/${id}`;
+    }
+
     const newUpload: Upload = {
       id,
       user_id: userId,
       filename,
       original_name: originalName,
       file_size: fileSize,
-      file_path: filePath,
+      file_path: dbFilePath,
       created_at: new Date().toISOString()
     };
 
@@ -1029,6 +1090,7 @@ class ThreadCountyDatabase {
         fabric_type: 'Denim / Twill Weave',
         confidence: 0.96,
         daysAgo: 14,
+        file_path: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&auto=format&fit=crop&q=60',
         suggestions: [
           'Warp tension is slightly high; reduce by 2% to avoid fabric curling.',
           'Weft alignment shows high consistency. Excellent weave uniformity.',
@@ -1043,6 +1105,7 @@ class ThreadCountyDatabase {
         fabric_type: 'Linen / Plain Weave',
         confidence: 0.94,
         daysAgo: 11,
+        file_path: 'https://images.unsplash.com/photo-1576570734306-e3de0c8e0c7a?w=500&auto=format&fit=crop&q=60',
         suggestions: [
           'Plain weave structure verified with standard 1:1 interlacing.',
           'Warp yarn thickness variation is within 3% tolerance.',
@@ -1057,6 +1120,7 @@ class ThreadCountyDatabase {
         fabric_type: 'Cotton / Plain Weave',
         confidence: 0.97,
         daysAgo: 8,
+        file_path: 'https://images.unsplash.com/photo-1598104358861-120d82998a4a?w=500&auto=format&fit=crop&q=60',
         suggestions: [
           'High quality combed cotton thread profile detected.',
           'Warp/weft ratio close to 1:1, offering optimal tensile strength.',
@@ -1071,6 +1135,7 @@ class ThreadCountyDatabase {
         fabric_type: 'Silk / Satin Weave',
         confidence: 0.99,
         daysAgo: 5,
+        file_path: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=500&auto=format&fit=crop&q=60',
         suggestions: [
           'Extremely fine thread profile with high density Satin structure.',
           'Surface luster index is optimal. No snags or thread breaks detected.',
@@ -1085,6 +1150,7 @@ class ThreadCountyDatabase {
         fabric_type: 'Wool / Twill Weave',
         confidence: 0.92,
         daysAgo: 2,
+        file_path: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=500&auto=format&fit=crop&q=60',
         suggestions: [
           'Low density coarse fiber weave verified. Standard wool twill structure.',
           'Pilling risk is low based on fiber surface density analysis.',
@@ -1099,6 +1165,7 @@ class ThreadCountyDatabase {
         fabric_type: 'Cotton / Canvas Weave',
         confidence: 0.95,
         daysAgo: 0,
+        file_path: 'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=500&auto=format&fit=crop&q=60',
         suggestions: [
           'Heavy cotton canvas structure verified.',
           'Warp count is stable, weft shows minor alignment shift of 1.5%.',
@@ -1122,7 +1189,7 @@ class ThreadCountyDatabase {
         filename: t.filename,
         original_name: t.original_name,
         file_size: fileSize,
-        file_path: `backend/uploads/${t.filename}`,
+        file_path: t.file_path || `backend/uploads/${t.filename}`,
         created_at: createdAt,
         is_demo: true,
         expires_at: expiresAt

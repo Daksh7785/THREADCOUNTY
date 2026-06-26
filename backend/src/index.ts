@@ -40,6 +40,16 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Ensure database is initialized/loaded (for serverless environments)
+app.use(async (req, res, next) => {
+  try {
+    await db.ensureDataLoaded();
+  } catch (err) {
+    console.error('[Startup] Failed to ensure database is loaded:', err);
+  }
+  next();
+});
+
 // Global structured request logger
 app.use(requestLogger);
 
