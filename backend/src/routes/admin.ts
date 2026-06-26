@@ -1,12 +1,25 @@
 import { Router, Response } from 'express';
 import { authenticateToken, isAdmin, AuthRequest } from '../middleware/auth';
 import db from '../models/db';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../middleware/auth';
+import winstonLogger from '../config/logger';
 
 const router = Router();
 
 // Apply auth and admin middleware to all routes
 router.use(authenticateToken as any);
 router.use(isAdmin as any);
+
+// Audit log helper — logs admin action to Winston + DB
+async function auditLog(adminId: string, action: string, details: Record<string, unknown> = {}) {
+  winstonLogger.info('Admin action', { adminId, action, ...details });
+  try {
+    await db.createAuditLog({ admin_id: adminId, action, details, timestamp: new Date().toISOString() });
+  } catch {
+    // Non-fatal — audit logging should not break the request
+  }
+}
 
 // @route   GET /api/admin/stats
 // @desc    Get aggregate platform metrics
@@ -20,18 +33,29 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
 });
 
 // @route   GET /api/admin/users
-// @desc    List all platform users
+// @desc    List all platform users (paginated)
 router.get('/users', async (req: AuthRequest, res: Response) => {
   try {
-    const profiles = await db.getAllProfilesAdmin();
-    res.json(profiles);
-  } catch (error) {
+    const page  = Math.max(1, parseInt(req.query.page  as string) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+
+    const allProfiles = await db.getAllProfilesAdmin();
+    const total = allProfiles.length;
+    const profiles = allProfiles.slice((page - 1) * limit, page * limit);
+
+    await auditLog(req.user!.id, 'VIEW_USERS_LIST', { page, limit, total });
+
+    res.json({
+      users: profiles,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch {
     res.status(500).json({ error: 'Failed to retrieve user directory.' });
   }
 });
 
 // @route   PUT /api/admin/users/:id/role
-// @desc    Update user access role (user vs admin)
+// @desc    Update user access role
 router.put('/users/:id/role', async (req: AuthRequest, res: Response) => {
   try {
     const { role } = req.body;
@@ -46,8 +70,9 @@ router.put('/users/:id/role', async (req: AuthRequest, res: Response) => {
     }
 
     const updated = await db.updateProfile(req.params.id, { role });
+    await auditLog(req.user!.id, 'UPDATE_USER_ROLE', { targetUserId: req.params.id, newRole: role });
     res.json({ message: `User role updated to ${role}.`, user: updated });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to update user role.' });
   }
 });
@@ -86,14 +111,63 @@ router.delete('/users/:id', async (req: AuthRequest, res: Response) => {
        return;
     }
 
+    const user = await db.getProfileById(req.params.id);
     const success = await db.deleteUserAccount(req.params.id);
     if (success) {
+      await auditLog(req.user!.id, 'DELETE_USER', {
+        deletedUserId: req.params.id,
+        deletedUserEmail: user?.email,
+      });
       res.json({ message: 'User account and associated records deleted.' });
     } else {
       res.status(400).json({ error: 'Failed to delete user.' });
     }
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to delete user account.' });
+  }
+});
+
+// @route   GET /api/admin/audit-logs
+// @desc    Get recent audit logs of all admin actions
+router.get('/audit-logs', async (req: AuthRequest, res: Response) => {
+  try {
+    const logs = await db.getAuditLogs();
+    res.json({ success: true, logs });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch audit logs.' });
+  }
+});
+
+// @route   POST /api/admin/impersonate/:userId
+// @desc    Generate a short-lived token to act as another user (for debugging)
+router.post('/impersonate/:userId', async (req: AuthRequest, res: Response) => {
+  try {
+    const targetUser = await db.getProfileById(req.params.userId);
+    if (!targetUser) {
+      res.status(404).json({ error: 'User not found.' });
+      return;
+    }
+
+    // Short-lived 1-hour token
+    const token = jwt.sign(
+      { id: targetUser.id, email: targetUser.email, role: targetUser.role, impersonatedBy: req.user!.id },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    await auditLog(req.user!.id, 'IMPERSONATE_USER', {
+      targetUserId: req.params.userId,
+      targetUserEmail: targetUser.email,
+    });
+
+    res.json({
+      success: true,
+      message: 'Impersonation token valid for 1 hour.',
+      token,
+      user: targetUser,
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to generate impersonation token.' });
   }
 });
 

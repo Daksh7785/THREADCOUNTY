@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import db from '../models/db';
+import { checkUploadLimit, checkStorageLimit } from '../middleware/planLimits';
 
 const router = Router();
 
@@ -52,7 +53,7 @@ const upload = multer({
 
 // @route   POST /api/upload
 // @desc    Upload fabric image
-router.post('/', authenticateToken as any, (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken as any, checkUploadLimit as any, checkStorageLimit as any, (req: AuthRequest, res: Response) => {
   upload(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {

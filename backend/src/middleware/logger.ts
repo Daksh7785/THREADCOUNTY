@@ -1,55 +1,42 @@
 import { Request, Response, NextFunction } from 'express';
+import { randomUUID } from 'crypto';
+import winstonLogger from '../config/logger';
 
-// ─── Structured Logger ────────────────────────────────────────────────────────
-
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
-
-function log(level: LogLevel, message: string, meta?: Record<string, unknown>) {
-  const entry = {
-    timestamp: new Date().toISOString(),
-    level,
-    message,
-    ...meta,
-  };
-  if (level === 'error') {
-    console.error(JSON.stringify(entry));
-  } else {
-    console.log(JSON.stringify(entry));
-  }
-}
-
+// ─── Structured Logger (Winston-backed) ──────────────────────────────────────
 export const logger = {
-  info:  (msg: string, meta?: Record<string, unknown>) => log('info',  msg, meta),
-  warn:  (msg: string, meta?: Record<string, unknown>) => log('warn',  msg, meta),
-  error: (msg: string, meta?: Record<string, unknown>) => log('error', msg, meta),
-  debug: (msg: string, meta?: Record<string, unknown>) => log('debug', msg, meta),
+  info:  (msg: string, meta?: Record<string, unknown>) => winstonLogger.info(msg, meta),
+  warn:  (msg: string, meta?: Record<string, unknown>) => winstonLogger.warn(msg, meta),
+  error: (msg: string, meta?: Record<string, unknown>) => winstonLogger.error(msg, meta),
+  debug: (msg: string, meta?: Record<string, unknown>) => winstonLogger.debug(msg, meta),
 };
 
 // ─── Request Logging Middleware ───────────────────────────────────────────────
 
 /**
- * Attaches to every route — logs method + path + user ID (if available) on
- * request, then intercepts res.json to log status + duration on response.
+ * Attaches to every route — logs method + path + requestId + userId on request,
+ * then logs status + duration on response finish.
  */
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
+  const requestId = randomUUID();
   const start = Date.now();
-  const { method, path, ip } = req;
+  const { method, path: reqPath, ip } = req;
   const userId = (req as any).user?.id || 'unauthenticated';
 
-  logger.info('Request received', { method, path, userId, ip });
+  (req as any).id = requestId;
 
-  // Patch res.json to capture status code + duration after the handler runs
-  const originalJson = res.json.bind(res);
-  res.json = (body: any) => {
+  res.on('finish', () => {
     const duration = Date.now() - start;
     const status = res.statusCode;
-    if (status >= 400) {
-      logger.warn('Request failed', { method, path, userId, status, duration, error: body?.error });
+    const meta = { requestId, method, path: reqPath, status, duration: `${duration}ms`, userId, ip };
+
+    if (status >= 500) {
+      winstonLogger.error('Request error', meta);
+    } else if (status >= 400) {
+      winstonLogger.warn('Request failed', meta);
     } else {
-      logger.info('Request success', { method, path, userId, status, duration });
+      winstonLogger.info('Request completed', meta);
     }
-    return originalJson(body);
-  };
+  });
 
   next();
 }

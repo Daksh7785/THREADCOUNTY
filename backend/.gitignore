@@ -1,1 +1,9 @@
 .vercel
+node_modules
+dist
+uploads/*.png
+uploads/*.jpg
+uploads/*.jpeg
+uploads/*.webp
+*.log
+*.local

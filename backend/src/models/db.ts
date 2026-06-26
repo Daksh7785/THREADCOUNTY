@@ -67,6 +67,22 @@ export interface Notification {
   expires_at?: string;
 }
 
+export interface NotificationPreferences {
+  user_id: string;
+  email_on_analysis_complete: boolean;
+  email_on_upload_success: boolean;
+  email_on_subscription_changes: boolean;
+  email_newsletter: boolean;
+}
+
+export interface AuditLog {
+  id: string;
+  admin_id: string;
+  action: string;
+  details: any;
+  timestamp: string;
+}
+
 // Local db file path
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -79,6 +95,8 @@ interface LocalDatabase {
   reports: Report[];
   contact_messages: ContactMessage[];
   notifications: Notification[];
+  notification_preferences?: NotificationPreferences[];
+  audit_logs?: AuditLog[];
 }
 
 class ThreadCountyDatabase {
@@ -90,7 +108,9 @@ class ThreadCountyDatabase {
     uploads: [],
     reports: [],
     contact_messages: [],
-    notifications: []
+    notifications: [],
+    notification_preferences: [],
+    audit_logs: []
   };
 
   constructor() {
@@ -755,6 +775,142 @@ class ThreadCountyDatabase {
       return !error;
     }
   }
+
+  public async getNotifications(userId: string, unreadOnly = false): Promise<Notification[]> {
+    if (this.isLocalMode) {
+      let notifs = this.localData.notifications.filter(n => n.user_id === userId);
+      if (unreadOnly) {
+        notifs = notifs.filter(n => !n.is_read);
+      }
+      return notifs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else {
+      let query = this.supabase!
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (unreadOnly) {
+        query = query.eq('is_read', false);
+      }
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) return [];
+      return data;
+    }
+  }
+
+  public async markAllNotificationsRead(userId: string): Promise<void> {
+    if (this.isLocalMode) {
+      this.localData.notifications.forEach(n => {
+        if (n.user_id === userId) n.is_read = true;
+      });
+      this.saveLocalDb();
+    } else {
+      await this.supabase!
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', userId);
+    }
+  }
+
+  public async getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+    const defaultPrefs: NotificationPreferences = {
+      user_id: userId,
+      email_on_analysis_complete: true,
+      email_on_upload_success: true,
+      email_on_subscription_changes: true,
+      email_newsletter: false
+    };
+
+    if (this.isLocalMode) {
+      if (!this.localData.notification_preferences) {
+        this.localData.notification_preferences = [];
+      }
+      const prefs = this.localData.notification_preferences.find(p => p.user_id === userId);
+      return prefs || defaultPrefs;
+    } else {
+      const { data, error } = await this.supabase!
+        .from('notification_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      if (error) return defaultPrefs;
+      return data;
+    }
+  }
+
+  public async updateNotificationPreferences(userId: string, updates: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
+    const defaultPrefs: NotificationPreferences = {
+      user_id: userId,
+      email_on_analysis_complete: true,
+      email_on_upload_success: true,
+      email_on_subscription_changes: true,
+      email_newsletter: false
+    };
+
+    if (this.isLocalMode) {
+      if (!this.localData.notification_preferences) {
+        this.localData.notification_preferences = [];
+      }
+      const idx = this.localData.notification_preferences.findIndex(p => p.user_id === userId);
+      if (idx !== -1) {
+        this.localData.notification_preferences[idx] = { ...this.localData.notification_preferences[idx], ...updates };
+      } else {
+        this.localData.notification_preferences.push({ ...defaultPrefs, ...updates });
+      }
+      this.saveLocalDb();
+      return this.getNotificationPreferences(userId);
+    } else {
+      const current = await this.getNotificationPreferences(userId);
+      const { data, error } = await this.supabase!
+        .from('notification_preferences')
+        .upsert({ ...current, ...updates, user_id: userId })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  }
+
+  public async createAuditLog(log: Omit<AuditLog, 'id'>): Promise<AuditLog> {
+    const newLog: AuditLog = {
+      id: this.isLocalMode ? 'audit-' + Math.random().toString(36).substr(2, 9) : randomUUID(),
+      ...log
+    };
+
+    if (this.isLocalMode) {
+      if (!this.localData.audit_logs) {
+        this.localData.audit_logs = [];
+      }
+      this.localData.audit_logs.push(newLog);
+      this.saveLocalDb();
+      return newLog;
+    } else {
+      const { data, error } = await this.supabase!
+        .from('audit_logs')
+        .insert([newLog])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  }
+
+  public async getAuditLogs(): Promise<AuditLog[]> {
+    if (this.isLocalMode) {
+      if (!this.localData.audit_logs) {
+        this.localData.audit_logs = [];
+      }
+      return [...this.localData.audit_logs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    } else {
+      const { data, error } = await this.supabase!
+        .from('audit_logs')
+        .select('*')
+        .order('timestamp', { ascending: false });
+      if (error) return [];
+      return data;
+    }
+  }
+
 
   // Admin Dashboard stats
   public async getAdminStats(): Promise<{

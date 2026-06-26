@@ -1,6 +1,8 @@
 import { Router, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import db from '../models/db';
+import { ReportGenerator } from '../services/reportGenerator';
+import fs from 'fs';
 
 const router = Router();
 
@@ -326,7 +328,7 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
 });
 
 // @route   GET /api/report/:id/download
-// @desc    Download report data (JSON or HTML print layout)
+// @desc    Download report — PDF (default), JSON, or HTML print layout
 router.get('/:id/download', async (req: AuthRequest, res: Response) => {
   try {
     const report = await db.getReportById(req.params.id);
@@ -341,8 +343,37 @@ router.get('/:id/download', async (req: AuthRequest, res: Response) => {
     }
 
     const upload = await db.getUploadById(report.upload_id);
-    const format = req.query.format || 'json';
+    const format = (req.query.format as string) || 'pdf';
 
+    // ── PDF ──────────────────────────────────────────────────────────────────
+    if (format === 'pdf') {
+      try {
+        const generator = new ReportGenerator();
+        const pdfPath = await generator.generate(report, upload!);
+        const filename = `threadcounty-report-${report.id}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        const fileStream = fs.createReadStream(pdfPath);
+        fileStream.pipe(res);
+
+        fileStream.on('end', () => {
+          // Clean up temporary PDF after streaming
+          try { fs.unlinkSync(pdfPath); } catch { /* ignore */ }
+        });
+
+        fileStream.on('error', () => {
+          res.status(500).json({ error: 'Failed to stream PDF.' });
+        });
+        return;
+      } catch (pdfErr) {
+        console.error('[Report] PDF generation failed, falling back to JSON:', pdfErr);
+        // Fall through to JSON
+      }
+    }
+
+    // ── JSON ─────────────────────────────────────────────────────────────────
     if (format === 'json') {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', `attachment; filename=threadcounty-report-${report.id}.json`);

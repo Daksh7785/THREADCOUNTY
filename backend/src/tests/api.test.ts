@@ -146,6 +146,99 @@ async function runTests() {
     }
     console.log('✅ Admin reports passed.');
 
+    // Extract a report ID for downstream tests
+    const testReportId = adminReportsData.reports[0]?.id;
+
+    // Test 10: Input validation failure check
+    console.log('Test 10: Input validation failure check...');
+    const invalidLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email', password: '' })
+    });
+    const invalidLoginData = await invalidLoginRes.json() as any;
+    if (invalidLoginRes.status !== 400 || invalidLoginData.success !== false || !invalidLoginData.details) {
+      throw new Error(`Validation failure check failed: status ${invalidLoginRes.status}, data: ${JSON.stringify(invalidLoginData)}`);
+    }
+    console.log('✅ Input validation failure check passed.');
+
+    // Test 11: Notification endpoints
+    console.log('Test 11: Notification list and preference endpoints...');
+    const notifListRes = await fetch(`${BASE_URL}/api/notifications`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const notifListData = await notifListRes.json() as any;
+    if (notifListRes.status !== 200 || !Array.isArray(notifListData.notifications)) {
+      throw new Error(`Notification listing failed: status ${notifListRes.status}, data: ${JSON.stringify(notifListData)}`);
+    }
+
+    const notifPrefRes = await fetch(`${BASE_URL}/api/notifications/preferences`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const notifPrefData = await notifPrefRes.json() as any;
+    if (notifPrefRes.status !== 200 || notifPrefData.preferences.email_on_analysis_complete === undefined) {
+      throw new Error(`Get notification preferences failed: status ${notifPrefRes.status}, data: ${JSON.stringify(notifPrefData)}`);
+    }
+
+    const updatePrefRes = await fetch(`${BASE_URL}/api/notifications/preferences`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ email_newsletter: true })
+    });
+    const updatePrefData = await updatePrefRes.json() as any;
+    if (updatePrefRes.status !== 200 || updatePrefData.preferences.email_newsletter !== true) {
+      throw new Error(`Update notification preferences failed: status ${updatePrefRes.status}, data: ${JSON.stringify(updatePrefData)}`);
+    }
+    console.log('✅ Notification endpoints passed.');
+
+    // Test 12: PDF Report Generation download
+    if (testReportId) {
+      console.log(`Test 12: PDF Report download for report ID ${testReportId}...`);
+      const downloadRes = await fetch(`${BASE_URL}/api/report/${testReportId}/download?format=pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (downloadRes.status !== 200 || downloadRes.headers.get('Content-Type') !== 'application/pdf') {
+        throw new Error(`PDF Download failed: status ${downloadRes.status}, Content-Type: ${downloadRes.headers.get('Content-Type')}`);
+      }
+      console.log('✅ PDF Report download passed.');
+    } else {
+      console.log('Test 12: PDF Report download (SKIPPED — no reports seeded).');
+    }
+
+    // Test 13: Admin paginated user directory
+    console.log('Test 13: Admin paginated user list...');
+    const userDirRes = await fetch(`${BASE_URL}/api/admin/users?page=1&limit=2`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const userDirData = await userDirRes.json() as any;
+    if (userDirRes.status !== 200 || !userDirData.pagination || userDirData.pagination.limit !== 2) {
+      throw new Error(`Admin paginated users failed: status ${userDirRes.status}, data: ${JSON.stringify(userDirData)}`);
+    }
+    console.log('✅ Admin paginated user list passed.');
+
+    // Test 14: Admin impersonation & audit logs
+    console.log('Test 14: Impersonation and Audit Logs...');
+    const impersonateRes = await fetch(`${BASE_URL}/api/admin/impersonate/u-free-seed`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const impersonateData = await impersonateRes.json() as any;
+    if (impersonateRes.status !== 200 || !impersonateData.token || impersonateData.user.email !== 'demo.free@threadcounty.app') {
+      throw new Error(`Impersonation failed: status ${impersonateRes.status}, data: ${JSON.stringify(impersonateData)}`);
+    }
+
+    const auditRes = await fetch(`${BASE_URL}/api/admin/audit-logs`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const auditData = await auditRes.json() as any;
+    if (auditRes.status !== 200 || !Array.isArray(auditData.logs) || auditData.logs.length === 0) {
+      throw new Error(`Audit log retrieval failed: status ${auditRes.status}, data: ${JSON.stringify(auditData)}`);
+    }
+    console.log('✅ Impersonation and Audit Logs passed.');
+
     console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! 🎉');
     cleanup(serverProcess, 0);
 

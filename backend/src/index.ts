@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -18,19 +19,22 @@ import checkoutRouter from './routes/checkout';
 import adminSettingsRouter from './routes/adminSettings';
 import demoRouter from './routes/demo';
 import chatRouter from './routes/chat';
+import notificationsRouter from './routes/notifications';
 import { requestLogger } from './middleware/logger';
 import { authRateLimiter, uploadRateLimiter, contactRateLimiter } from './middleware/rateLimiter';
+import { corsOptions } from './config/cors';
 import db from './models/db';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS
-app.use(cors({
-  origin: '*', // For hackathon purposes, allow all connections
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Security headers (helmet)
+app.use(helmet());
+app.use(helmet.frameguard({ action: 'deny' }));
+app.use(helmet.noSniff());
+
+// CORS — strict origin whitelist
+app.use(cors(corsOptions));
 
 // Body parsers
 app.use(express.json());
@@ -124,6 +128,7 @@ app.use('/api/contact', contactRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/demo', demoRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

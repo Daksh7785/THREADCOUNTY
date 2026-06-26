@@ -5,6 +5,8 @@ import { OAuth2Client } from 'google-auth-library';
 import db from '../models/db';
 import { JWT_SECRET } from '../middleware/auth';
 import { sendPasswordResetOTP, sendWelcomeEmail } from '../middleware/emailService';
+import { validateRequest } from '../middleware/validation';
+import { schemas } from '../config/validationSchemas';
 
 const router = Router();
 
@@ -138,19 +140,9 @@ router.post('/google', async (req, res: Response) => {
 // @route   POST /api/auth/signup
 // @desc    Register a new user
 // ─────────────────────────────────────────────
-router.post('/signup', async (req, res: Response) => {
+router.post('/signup', validateRequest(schemas.signup) as any, async (req: any, res: Response) => {
   try {
-    const { name, email, password, company } = req.body;
-
-    if (!name || !email || !password) {
-      res.status(400).json({ error: 'Name, email, and password are required.' });
-      return;
-    }
-
-    if (password.length < 6) {
-      res.status(400).json({ error: 'Password must be at least 6 characters long.' });
-      return;
-    }
+    const { name, email, password, company } = req.validated;
 
     const existingUser = await db.getProfileByEmail(email);
     if (existingUser) {
@@ -196,14 +188,9 @@ router.post('/signup', async (req, res: Response) => {
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
 // ─────────────────────────────────────────────
-router.post('/login', async (req, res: Response) => {
+router.post('/login', validateRequest(schemas.login) as any, async (req: any, res: Response) => {
   try {
-    const { email, password, rememberMe } = req.body;
-
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required.' });
-      return;
-    }
+    const { email, password, rememberMe } = req.validated;
 
     const user = await db.getProfileByEmail(email);
     if (!user) {
@@ -249,13 +236,9 @@ router.post('/login', async (req, res: Response) => {
 // @route   POST /api/auth/forgot-password
 // @desc    Send a real 6-digit OTP to the user's email via Resend
 // ─────────────────────────────────────────────
-router.post('/forgot-password', async (req, res: Response) => {
+router.post('/forgot-password', validateRequest(schemas.forgotPassword) as any, async (req: any, res: Response) => {
   try {
-    const { email } = req.body;
-    if (!email) {
-      res.status(400).json({ error: 'Email is required.' });
-      return;
-    }
+    const { email } = req.validated;
 
     const user = await db.getProfileByEmail(email);
     if (!user) {
@@ -302,18 +285,9 @@ router.post('/forgot-password', async (req, res: Response) => {
 // @route   POST /api/auth/reset-password
 // @desc    Reset password using the real OTP
 // ─────────────────────────────────────────────
-router.post('/reset-password', async (req, res: Response) => {
+router.post('/reset-password', validateRequest(schemas.resetPassword) as any, async (req: any, res: Response) => {
   try {
-    const { email, code, newPassword } = req.body;
-    if (!email || !code || !newPassword) {
-      res.status(400).json({ error: 'Email, verification code, and new password are required.' });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      res.status(400).json({ error: 'New password must be at least 6 characters long.' });
-      return;
-    }
+    const { email, code, newPassword } = req.validated;
 
     const key = email.toLowerCase();
     const record = otpStore.get(key);
