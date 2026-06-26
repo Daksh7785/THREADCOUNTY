@@ -1,3 +1,4 @@
+import imageCompression from 'browser-image-compression';
 import { API_URL, API } from '../config';
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -52,8 +53,8 @@ export const UploadPage: React.FC = () => {
     }
   };
 
-  // Validate file dimensions and type
-  const validateAndSetFile = (selectedFile: File) => {
+  // Validate file dimensions and type, and compress
+  const validateAndSetFile = async (selectedFile: File) => {
     setError('');
     
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
@@ -62,20 +63,32 @@ export const UploadPage: React.FC = () => {
       return;
     }
 
+    let fileToUse = selectedFile;
+    try {
+      const options = {
+        maxSizeMB: 5,
+        maxWidthOrHeight: 2048,
+        useWebWorker: true
+      };
+      fileToUse = await imageCompression(selectedFile, options) as File;
+    } catch (error) {
+      console.warn("Image compression failed, using original file", error);
+    }
+
     const maxSize = 5 * 1024 * 1024; // 5MB
-    if (selectedFile.size > maxSize) {
-      setError('File is too large. Maximum size is 5MB.');
+    if (fileToUse.size > maxSize) {
+      setError('File is too large even after compression. Maximum size is 5MB.');
       return;
     }
 
-    setFile(selectedFile);
+    setFile(fileToUse);
     
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
     };
-    reader.readAsDataURL(selectedFile);
+    reader.readAsDataURL(fileToUse);
   };
 
   const removeFile = () => {
