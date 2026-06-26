@@ -1,40 +1,52 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import DashboardLayout from './components/DashboardLayout';
 
-// Public Pages
-import LandingPage from './pages/LandingPage';
-import AboutPage from './pages/AboutPage';
-import PricingPage from './pages/PricingPage';
-import FAQPage from './pages/FAQPage';
-import ContactPage from './pages/ContactPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
-import CheckoutPage from './pages/CheckoutPage';
+// Lazy-loaded Public Pages
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
+const AboutPage = React.lazy(() => import('./pages/AboutPage'));
+const PricingPage = React.lazy(() => import('./pages/PricingPage'));
+const FAQPage = React.lazy(() => import('./pages/FAQPage'));
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));
+const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+const CheckoutPage = React.lazy(() => import('./pages/CheckoutPage'));
+const BlogPage = React.lazy(() => import('./pages/BlogPage'));
+const ForumPage = React.lazy(() => import('./pages/ForumPage'));
 
-// Auth Pages
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import VerifyEmailPage from './pages/VerifyEmailPage';
+// Lazy-loaded Auth Pages
+const LoginPage = React.lazy(() => import('./pages/LoginPage'));
+const SignupPage = React.lazy(() => import('./pages/SignupPage'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
+const VerifyEmailPage = React.lazy(() => import('./pages/VerifyEmailPage'));
 
-// Protected Pages
-import Dashboard from './pages/Dashboard';
-import UploadPage from './pages/UploadPage';
-import AnalysisResultPage from './pages/AnalysisResultPage';
-import HistoryPage from './pages/HistoryPage';
-import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/AdminDashboard';
-import ComparePage from './pages/ComparePage';
+// Lazy-loaded Protected Pages
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const UploadPage = React.lazy(() => import('./pages/UploadPage'));
+const AnalysisResultPage = React.lazy(() => import('./pages/AnalysisResultPage'));
+const HistoryPage = React.lazy(() => import('./pages/HistoryPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const ComparePage = React.lazy(() => import('./pages/ComparePage'));
 import CookieConsent from './components/CookieConsent';
 import AIChatbot from './components/AIChatbot';
 
 // CSS Imports
 import './App.css';
 import './index.css';
+
+// Suspense Loading Fallback
+const PageLoader = () => (
+  <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading page...</p>
+    </div>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ 
@@ -98,88 +110,92 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <Routes>
-            {/* Public Marketing Routes */}
-            <Route path="/" element={<PublicRouteLayout><LandingPage /></PublicRouteLayout>} />
-            <Route path="/about" element={<PublicRouteLayout><AboutPage /></PublicRouteLayout>} />
-            <Route path="/pricing" element={<PublicRouteLayout><PricingPage /></PublicRouteLayout>} />
-            <Route path="/faq" element={<PublicRouteLayout><FAQPage /></PublicRouteLayout>} />
-            <Route path="/contact" element={<PublicRouteLayout><ContactPage /></PublicRouteLayout>} />
-            <Route path="/privacy" element={<PublicRouteLayout><PrivacyPage /></PublicRouteLayout>} />
-            <Route path="/terms" element={<PublicRouteLayout><TermsPage /></PublicRouteLayout>} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Marketing Routes */}
+              <Route path="/" element={<PublicRouteLayout><LandingPage /></PublicRouteLayout>} />
+              <Route path="/about" element={<PublicRouteLayout><AboutPage /></PublicRouteLayout>} />
+              <Route path="/pricing" element={<PublicRouteLayout><PricingPage /></PublicRouteLayout>} />
+              <Route path="/faq" element={<PublicRouteLayout><FAQPage /></PublicRouteLayout>} />
+              <Route path="/contact" element={<PublicRouteLayout><ContactPage /></PublicRouteLayout>} />
+              <Route path="/privacy" element={<PublicRouteLayout><PrivacyPage /></PublicRouteLayout>} />
+              <Route path="/terms" element={<PublicRouteLayout><TermsPage /></PublicRouteLayout>} />
+              <Route path="/blog" element={<PublicRouteLayout><BlogPage /></PublicRouteLayout>} />
+              <Route path="/forum" element={<PublicRouteLayout><ForumPage /></PublicRouteLayout>} />
 
-            {/* Auth Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
+              {/* Auth Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-            {/* Standalone pages (no nav) */}
-            <Route path="/checkout/:plan" element={<CheckoutPage />} />
+              {/* Standalone pages (no nav) */}
+              <Route path="/checkout/:plan" element={<CheckoutPage />} />
 
-            {/* Protected User Workspace Routes */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/upload" 
-              element={
-                <ProtectedRoute>
-                  <UploadPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/report/:id" 
-              element={
-                <ProtectedRoute>
-                  <AnalysisResultPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/history" 
-              element={
-                <ProtectedRoute>
-                  <HistoryPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/compare" 
-              element={
-                <ProtectedRoute>
-                  <ComparePage />
-                </ProtectedRoute>
-              } 
-            />
+              {/* Protected User Workspace Routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/upload" 
+                element={
+                  <ProtectedRoute>
+                    <UploadPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/report/:id" 
+                element={
+                  <ProtectedRoute>
+                    <AnalysisResultPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/history" 
+                element={
+                  <ProtectedRoute>
+                    <HistoryPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/compare" 
+                element={
+                  <ProtectedRoute>
+                    <ComparePage />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Protected Admin Console Routes */}
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
+              {/* Protected Admin Console Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Fallback Catch-all Redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Fallback Catch-all Redirect */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
           <CookieConsent />
           <AIChatbot />
         </Router>
