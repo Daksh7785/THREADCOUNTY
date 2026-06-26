@@ -64,7 +64,15 @@ router.post('/analyze', async (req: AuthRequest, res: Response) => {
         report: existingReport,
         upload
       });
-       return;
+    }
+
+    // Automatically purge demo data if this is the user's first real analysis
+    if (!upload.is_demo) {
+      try {
+        await db.clearDemoDataForUser(req.user!.id);
+      } catch (clearErr) {
+        console.error('[Analyze] Failed to clear demo data:', clearErr);
+      }
     }
 
     // ── Attempt Gemini Vision Analysis ──────────────────────────────────────
@@ -91,13 +99,21 @@ router.post('/analyze', async (req: AuthRequest, res: Response) => {
         let imageBase64: string | null = null;
         let mimeType = 'image/jpeg';
 
-        for (const p of possiblePaths) {
-          if (fs.existsSync(p)) {
-            const buffer = fs.readFileSync(p);
-            imageBase64 = buffer.toString('base64');
-            const ext = path.extname(upload.filename).toLowerCase();
-            mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
-            break;
+        if (upload.file_path && upload.file_path.startsWith('data:')) {
+          const match = upload.file_path.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            mimeType = match[1];
+            imageBase64 = match[2];
+          }
+        } else {
+          for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+              const buffer = fs.readFileSync(p);
+              imageBase64 = buffer.toString('base64');
+              const ext = path.extname(upload.filename).toLowerCase();
+              mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+              break;
+            }
           }
         }
 

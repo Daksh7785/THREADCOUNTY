@@ -72,14 +72,25 @@ router.post('/', authenticateToken as any, (req: AuthRequest, res: Response) => 
     }
 
     try {
-      // Create upload in db
-      const relativePath = path.relative(path.join(__dirname, '..', '..'), req.file.path).replace(/\\/g, '/');
+      // Read file and convert to Base64 data URL
+      const fileBuffer = fs.readFileSync(req.file.path);
+      const base64Data = fileBuffer.toString('base64');
+      const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
+      // Clean up the temporary file from disk immediately
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkErr) {
+        console.error('[Upload] Failed to delete temporary file:', unlinkErr);
+      }
+
+      // Create upload in db with base64 dataUrl
       const uploadRecord = await db.createUpload(
         req.user!.id,
         req.file.filename,
         req.file.originalname,
         req.file.size,
-        relativePath
+        dataUrl
       );
 
       res.status(201).json({

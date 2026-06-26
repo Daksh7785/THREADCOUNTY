@@ -1032,6 +1032,51 @@ class ThreadCountyDatabase {
     }
   }
 
+  public async clearDemoDataForUser(userId: string): Promise<void> {
+    console.log(`[Database] Clearing all demo data for user: ${userId}`);
+
+    if (this.isLocalMode) {
+      // 1. Unlink disk files first (skip standard template resources)
+      const demoUploads = this.localData.uploads.filter(u => u.user_id === userId && u.is_demo);
+      for (const u of demoUploads) {
+        if (u.filename && !u.filename.startsWith('sample_')) {
+          try {
+            const absolutePath = path.resolve(u.file_path);
+            if (fs.existsSync(absolutePath)) {
+              fs.unlinkSync(absolutePath);
+            }
+          } catch (e) {}
+        }
+      }
+
+      // 2. Filter local arrays
+      this.localData.uploads = this.localData.uploads.filter(u => !(u.user_id === userId && u.is_demo));
+      this.localData.reports = this.localData.reports.filter(r => !(r.user_id === userId && r.is_demo));
+      this.localData.notifications = this.localData.notifications.filter(n => !(n.user_id === userId && n.is_demo));
+      
+      // 3. Recalculate storage
+      const pIdx = this.localData.profiles.findIndex(p => p.id === userId);
+      if (pIdx !== -1) {
+        this.localData.profiles[pIdx].storage_used = this.localData.uploads
+          .filter(u => u.user_id === userId)
+          .reduce((sum, u) => sum + u.file_size, 0);
+      }
+
+      this.saveLocalDb();
+    } else {
+      await this.supabase!.from('reports').delete().eq('user_id', userId).eq('is_demo', true);
+      await this.supabase!.from('uploads').delete().eq('user_id', userId).eq('is_demo', true);
+      await this.supabase!.from('notifications').delete().eq('user_id', userId).eq('is_demo', true);
+
+      const uploads = await this.getUploadsByUser(userId);
+      const newStorageUsed = uploads.reduce((sum, u) => sum + u.file_size, 0);
+      await this.supabase!
+        .from('profiles')
+        .update({ storage_used: newStorageUsed })
+        .eq('id', userId);
+    }
+  }
+
   public async cleanupExpiredDemoData(): Promise<void> {
     const now = new Date().toISOString();
     console.log(`[Demo Worker] Checking for expired demo data at ${now}...`);
