@@ -198,12 +198,22 @@ Base your analysis on visible thread patterns, weave structure, fiber texture, a
         warp = 30 + Math.floor(Math.random() * 8);
         weft = 26 + Math.floor(Math.random() * 6);
         confidence = 0.91 + Math.random() * 0.05;
+      } else if (nameLower.includes('cotton') || nameLower.includes('plain') || nameLower.includes('shirt')) {
+        fabricType = 'Cotton / Plain Weave';
+        warp = 82 + Math.floor(Math.random() * 8);
+        weft = 78 + Math.floor(Math.random() * 8);
+        confidence = 0.95 + Math.random() * 0.03;
+      } else if (nameLower.includes('synthetic') || nameLower.includes('polyester') || nameLower.includes('nylon')) {
+        fabricType = 'Synthetic / Plain Weave';
+        warp = 72 + Math.floor(Math.random() * 10);
+        weft = 68 + Math.floor(Math.random() * 10);
+        confidence = 0.93 + Math.random() * 0.04;
       } else {
-        const types = Object.keys(FABRIC_SUGGESTIONS);
-        fabricType = types[Math.floor(Math.random() * types.length)];
-        warp = 48 + Math.floor(Math.random() * 12);
-        weft = 46 + Math.floor(Math.random() * 12);
-        confidence = 0.91 + Math.random() * 0.07;
+        // Fallback default: Cotton / Plain Weave (most common)
+        fabricType = 'Cotton / Plain Weave';
+        warp = 82 + Math.floor(Math.random() * 8);
+        weft = 78 + Math.floor(Math.random() * 8);
+        confidence = 0.90 + Math.random() * 0.05;
       }
 
       suggestions = FABRIC_SUGGESTIONS[fabricType] || [
