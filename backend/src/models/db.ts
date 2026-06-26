@@ -84,8 +84,11 @@ export interface AuditLog {
 }
 
 // Local db file path
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const DATA_DIR = process.env.VERCEL 
+  ? '/tmp' 
+  : path.join(__dirname, '..', '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
+const ORIGINAL_DB_FILE = path.join(__dirname, '..', '..', 'data', 'db.json');
 
 // Interface for DB representation in local JSON file
 interface LocalDatabase {
@@ -148,8 +151,19 @@ class ThreadCountyDatabase {
 
   // --- LOCAL SANDBOX INITIALIZATION ---
   private initLocalDb() {
-    if (!fs.existsSync(DATA_DIR)) {
+    if (!process.env.VERCEL && !fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+
+    if (process.env.VERCEL && !fs.existsSync(DB_FILE)) {
+      try {
+        if (fs.existsSync(ORIGINAL_DB_FILE)) {
+          fs.copyFileSync(ORIGINAL_DB_FILE, DB_FILE);
+          console.log('[Database] Copied seed db.json to /tmp/db.json');
+        }
+      } catch (copyErr) {
+        console.error('[Database] Failed to copy seed db.json to /tmp:', copyErr);
+      }
     }
 
     if (fs.existsSync(DB_FILE)) {

@@ -353,6 +353,30 @@
       "subject": "Automated Test",
       "message": "This is a message from the automated integration test suite.",
       "created_at": "2026-06-26T18:51:34.014Z"
+    },
+    {
+      "id": "msg-wqzp2k9om",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-26T18:53:52.161Z"
+    },
+    {
+      "id": "msg-pdhbm6max",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-26T18:59:24.771Z"
+    },
+    {
+      "id": "msg-udmpesnv6",
+      "name": "Tester",
+      "email": "test@example.com",
+      "subject": "Automated Test",
+      "message": "This is a message from the automated integration test suite.",
+      "created_at": "2026-06-26T19:05:32.239Z"
     }
   ],
   "notifications": [
@@ -477,6 +501,69 @@
         "targetUserEmail": "demo.free@threadcounty.app"
       },
       "timestamp": "2026-06-26T18:51:34.103Z"
+    },
+    {
+      "id": "audit-n7s7uasu7",
+      "admin_id": "u-admin-seed",
+      "action": "VIEW_USERS_LIST",
+      "details": {
+        "page": 1,
+        "limit": 2,
+        "total": 7
+      },
+      "timestamp": "2026-06-26T18:53:52.249Z"
+    },
+    {
+      "id": "audit-5cpsl06kc",
+      "admin_id": "u-admin-seed",
+      "action": "IMPERSONATE_USER",
+      "details": {
+        "targetUserId": "u-free-seed",
+        "targetUserEmail": "demo.free@threadcounty.app"
+      },
+      "timestamp": "2026-06-26T18:53:52.253Z"
+    },
+    {
+      "id": "audit-tjgtj6afj",
+      "admin_id": "u-admin-seed",
+      "action": "VIEW_USERS_LIST",
+      "details": {
+        "page": 1,
+        "limit": 2,
+        "total": 7
+      },
+      "timestamp": "2026-06-26T18:59:24.853Z"
+    },
+    {
+      "id": "audit-loiuwsmy5",
+      "admin_id": "u-admin-seed",
+      "action": "IMPERSONATE_USER",
+      "details": {
+        "targetUserId": "u-free-seed",
+        "targetUserEmail": "demo.free@threadcounty.app"
+      },
+      "timestamp": "2026-06-26T18:59:24.857Z"
+    },
+    {
+      "id": "audit-ptg37h5u7",
+      "admin_id": "u-admin-seed",
+      "action": "VIEW_USERS_LIST",
+      "details": {
+        "page": 1,
+        "limit": 2,
+        "total": 7
+      },
+      "timestamp": "2026-06-26T19:05:32.339Z"
+    },
+    {
+      "id": "audit-k6zpu8ro1",
+      "admin_id": "u-admin-seed",
+      "action": "IMPERSONATE_USER",
+      "details": {
+        "targetUserId": "u-free-seed",
+        "targetUserEmail": "demo.free@threadcounty.app"
+      },
+      "timestamp": "2026-06-26T19:05:32.343Z"
     }
   ]
 }
