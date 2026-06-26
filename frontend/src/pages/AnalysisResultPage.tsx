@@ -2,6 +2,7 @@ import { API_URL, API } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Tesseract from 'tesseract.js';
 import { 
   Download, 
   Share2, 
@@ -10,7 +11,9 @@ import {
   Activity, 
   Grid,
   Info,
-  ChevronLeft
+  ChevronLeft,
+  ScanText,
+  Loader2
 } from 'lucide-react';
 
 export const AnalysisResultPage: React.FC = () => {
@@ -20,6 +23,9 @@ export const AnalysisResultPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showScannerGrid, setShowScannerGrid] = useState(true);
   const [shareCopied, setShareCopied] = useState(false);
+  const [ocrText, setOcrText] = useState<string | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrDone, setOcrDone] = useState(false);
 
   useEffect(() => {
     if (token && id) {
@@ -221,6 +227,47 @@ export const AnalysisResultPage: React.FC = () => {
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* OCR Text Extraction Section */}
+          <div className="glass-panel border rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <ScanText className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <h3 className="font-bold text-sm">OCR Text Detection</h3>
+              </div>
+              {!ocrDone && (
+                <button
+                  disabled={ocrLoading || !upload}
+                  onClick={async () => {
+                    if (!upload) return;
+                    setOcrLoading(true);
+                    try {
+                      const imgUrl = `${API}/${upload.file_path}`;
+                      const result = await Tesseract.recognize(imgUrl, 'eng');
+                      setOcrText(result.data.text.trim() || '(No readable text detected on fabric)');
+                    } catch {
+                      setOcrText('OCR analysis could not be completed for this image.');
+                    } finally {
+                      setOcrLoading(false);
+                      setOcrDone(true);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {ocrLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanText className="h-3 w-3" />}
+                  {ocrLoading ? 'Scanning...' : 'Scan for Text'}
+                </button>
+              )}
+            </div>
+            {ocrDone && ocrText && (
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
+                <pre className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">{ocrText}</pre>
+              </div>
+            )}
+            {!ocrDone && !ocrLoading && (
+              <p className="text-xs text-slate-400">Click "Scan for Text" to detect printed labels, tags, or markings on the fabric image using OCR.</p>
+            )}
           </div>
         </div>
       </div>
