@@ -66,8 +66,8 @@ export const UploadPage: React.FC = () => {
     let fileToUse = selectedFile;
     try {
       const options = {
-        maxSizeMB: 5,
-        maxWidthOrHeight: 2048,
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1024,
         useWebWorker: true
       };
       fileToUse = await imageCompression(selectedFile, options) as File;
