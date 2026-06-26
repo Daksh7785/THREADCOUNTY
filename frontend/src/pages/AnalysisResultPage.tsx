@@ -1,4 +1,4 @@
-import { API_URL, API } from '../config';
+import { API_URL, API, getImageUrl } from '../config';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -145,7 +145,7 @@ export const AnalysisResultPage: React.FC = () => {
           <div className="aspect-[4/3] w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 relative flex items-center justify-center">
             {upload ? (
               <img 
-                src={`${API}/${upload.file_path}`} 
+                src={getImageUrl(upload.file_path)} 
                 alt={upload.original_name} 
                 className="h-full w-full object-cover" 
               />
@@ -243,7 +243,7 @@ export const AnalysisResultPage: React.FC = () => {
                     if (!upload) return;
                     setOcrLoading(true);
                     try {
-                      const imgUrl = `${API}/${upload.file_path}`;
+                      const imgUrl = getImageUrl(upload.file_path);
                       const result = await Tesseract.recognize(imgUrl, 'eng');
                       setOcrText(result.data.text.trim() || '(No readable text detected on fabric)');
                     } catch {

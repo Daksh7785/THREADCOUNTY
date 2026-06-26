@@ -1,4 +1,4 @@
-import { API_URL, API } from '../config';
+import { API_URL, API, getImageUrl } from '../config';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -404,7 +404,7 @@ export const Dashboard: React.FC = () => {
                     <td className="py-3">
                       {rep.upload ? (
                         <img 
-                          src={`${API}/${rep.upload.file_path}`} 
+                          src={getImageUrl(rep.upload.file_path)} 
                           alt={rep.upload.original_name} 
                           className="h-10 w-12 rounded object-cover border border-slate-200 dark:border-slate-800"
                         />

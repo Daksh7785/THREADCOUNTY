@@ -1,4 +1,4 @@
-import { API_URL, API } from '../config';
+import { API_URL, API, getImageUrl } from '../config';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -265,7 +265,7 @@ export const HistoryPage: React.FC = () => {
               <div className="aspect-[4/3] w-full bg-slate-950 relative overflow-hidden flex items-center justify-center border-b">
                 {rep.upload ? (
                   <img 
-                    src={`${API}/${rep.upload.file_path}`} 
+                    src={getImageUrl(rep.upload.file_path)} 
                     alt={rep.upload.original_name} 
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     loading="lazy"

@@ -1,4 +1,4 @@
-import { API } from '../config';
+import { API, getImageUrl } from '../config';
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -114,7 +114,7 @@ const ReportPicker: React.FC<PickerProps> = ({ reports, selected, onSelect, side
           <div className="flex items-center gap-3 min-w-0">
             {selected.upload && (
               <img
-                src={`${API}/${selected.upload.file_path}`}
+                src={getImageUrl(selected.upload.file_path)}
                 alt=""
                 className="h-9 w-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
               />
@@ -148,7 +148,7 @@ const ReportPicker: React.FC<PickerProps> = ({ reports, selected, onSelect, side
               >
                 {rep.upload && (
                   <img
-                    src={`${API}/${rep.upload.file_path}`}
+                    src={getImageUrl(rep.upload.file_path)}
                     alt=""
                     className="h-9 w-12 rounded object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
                   />
@@ -186,7 +186,7 @@ const SwatchViewer: React.FC<{ report: any; side: 'A' | 'B' }> = ({ report, side
       <div className="relative aspect-[4/3] bg-slate-950 flex items-center justify-center">
         {report.upload ? (
           <img
-            src={`${API}/${report.upload.file_path}`}
+            src={getImageUrl(report.upload.file_path)}
             alt={report.upload.original_name}
             className="h-full w-full object-cover"
           />
