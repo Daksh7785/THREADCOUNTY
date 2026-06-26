@@ -146,8 +146,15 @@ class ThreadCountyDatabase {
     return this.isLocalMode ? 'local' : 'supabase';
   }
 
+  private lastLoadedTime = 0;
+
   public async ensureDataLoaded() {
-    if (this.dataLoaded) return;
+    const now = Date.now();
+    // On serverless (Vercel), refresh cache if it's older than 2 seconds
+    if (this.dataLoaded && (now - this.lastLoadedTime < 2000)) {
+      return;
+    }
+    
     if (this.isInitializing) {
       while (this.isInitializing) {
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -159,6 +166,7 @@ class ThreadCountyDatabase {
     try {
       await this.initLocalDb();
       this.dataLoaded = true;
+      this.lastLoadedTime = Date.now();
     } finally {
       this.isInitializing = false;
     }
@@ -396,30 +404,32 @@ class ThreadCountyDatabase {
     this.saveLocalDb();
   }
 
-  private saveLocalDb() {
+  private async saveLocalDb() {
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.localData, null, 2), 'utf-8');
     } catch (err) {
       console.warn('[Database] Failed to write db.json to disk:', err);
     }
     
-    // Save to KV store asynchronously
+    // Save to KV store synchronously
     const KV_DB_URL = 'https://kvdb.io/tcdakshbucket92929292/db';
-    fetch(KV_DB_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(this.localData)
-    }).then((res: any) => {
+    try {
+      const res = await fetch(KV_DB_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.localData)
+      });
       if (res.ok) {
         console.log('[Database] Successfully saved database to KV store.');
+        this.lastLoadedTime = Date.now();
       } else {
         console.warn('[Database] Failed to save database to KV store:', res.statusText);
       }
-    }).catch((err: any) => {
+    } catch (err: any) {
       console.warn('[Database] Error saving database to KV store:', err);
-    });
+    }
   }
 
   // --- PUBLIC API WRAPPER METHODS ---
@@ -596,7 +606,7 @@ class ThreadCountyDatabase {
       if (userIdx !== -1) {
         this.localData.profiles[userIdx].storage_used += fileSize;
       }
-      this.saveLocalDb();
+      await this.saveLocalDb();
       return newUpload;
     } else {
       const { data, error } = await this.supabase!
@@ -657,7 +667,7 @@ class ThreadCountyDatabase {
 
     if (this.isLocalMode) {
       this.localData.reports.push(newReport);
-      this.saveLocalDb();
+      await this.saveLocalDb();
       return newReport;
     } else {
       const { data, error } = await this.supabase!

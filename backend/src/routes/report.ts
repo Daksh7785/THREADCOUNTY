@@ -66,6 +66,7 @@ router.post('/analyze', async (req: AuthRequest, res: Response) => {
         report: existingReport,
         upload
       });
+      return;
     }
 
     // Automatically purge demo data if this is the user's first real analysis
