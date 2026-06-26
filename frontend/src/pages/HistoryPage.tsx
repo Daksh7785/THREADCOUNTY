@@ -1,5 +1,5 @@
 import { API_URL, API } from '../config';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -64,7 +64,22 @@ export const HistoryPage: React.FC = () => {
   // Search, filter, and sort state
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
-  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, density-desc, confidence-desc
+  const [sortBy, setSortBy] = useState('newest');
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  // Infinite scroll observer
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const lastSentinelCb = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setVisibleCount(prev => prev + 6);
+      }
+    }, { threshold: 0.1 });
+    if (node) observerRef.current.observe(node);
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -238,8 +253,9 @@ export const HistoryPage: React.FC = () => {
           <p className="text-xs text-slate-400">Try modifying your search keywords or adjusting sorting values.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {processedReports.map((rep) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {processedReports.slice(0, visibleCount).map((rep) => (
             <div 
               key={rep.id} 
               onClick={() => navigate(`/report/${rep.id}`)}
@@ -252,6 +268,7 @@ export const HistoryPage: React.FC = () => {
                     src={`${API}/${rep.upload.file_path}`} 
                     alt={rep.upload.original_name} 
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    loading="lazy"
                   />
                 ) : (
                   <div className="text-slate-500 text-xs">Image unavailable</div>
@@ -322,6 +339,16 @@ export const HistoryPage: React.FC = () => {
             </div>
           ))}
         </div>
+        {/* Infinite Scroll Sentinel */}
+        {visibleCount < processedReports.length && (
+          <div ref={lastSentinelCb} className="flex justify-center py-8">
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-semibold">
+              <div className="h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+              Loading more reports...
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
