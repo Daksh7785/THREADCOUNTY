@@ -95,7 +95,7 @@ class ThreadCountyDatabase {
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
 
     if (supabaseUrl && supabaseKey) {
       try {
@@ -977,8 +977,21 @@ class ThreadCountyDatabase {
         this.localData.uploads.push(upload);
         this.localData.reports.push(report);
       } else {
-        await this.supabase!.from('uploads').insert([upload]);
-        await this.supabase!.from('reports').insert([report]);
+        const { error: upError } = await this.supabase!.from('uploads').insert([upload]);
+        if (upError) {
+          console.warn('[Database] Failed to insert demo upload, retrying without is_demo/expires_at:', upError.message);
+          const { is_demo, expires_at, ...cleanUpload } = upload as any;
+          const { error: upRetryError } = await this.supabase!.from('uploads').insert([cleanUpload]);
+          if (upRetryError) throw upRetryError;
+        }
+
+        const { error: repError } = await this.supabase!.from('reports').insert([report]);
+        if (repError) {
+          console.warn('[Database] Failed to insert demo report, retrying without is_demo/expires_at:', repError.message);
+          const { is_demo, expires_at, ...cleanReport } = report as any;
+          const { error: repRetryError } = await this.supabase!.from('reports').insert([cleanReport]);
+          if (repRetryError) throw repRetryError;
+        }
       }
     }
 
@@ -1009,7 +1022,13 @@ class ThreadCountyDatabase {
       if (this.isLocalMode) {
         this.localData.notifications.push(notif);
       } else {
-        await this.supabase!.from('notifications').insert([notif]);
+        const { error: notifError } = await this.supabase!.from('notifications').insert([notif]);
+        if (notifError) {
+          console.warn('[Database] Failed to insert demo notification, retrying without is_demo/expires_at:', notifError.message);
+          const { is_demo, expires_at, ...cleanNotif } = notif as any;
+          const { error: notifRetryError } = await this.supabase!.from('notifications').insert([cleanNotif]);
+          if (notifRetryError) throw notifRetryError;
+        }
       }
     }
 
@@ -1064,9 +1083,18 @@ class ThreadCountyDatabase {
 
       this.saveLocalDb();
     } else {
-      await this.supabase!.from('reports').delete().eq('user_id', userId).eq('is_demo', true);
-      await this.supabase!.from('uploads').delete().eq('user_id', userId).eq('is_demo', true);
-      await this.supabase!.from('notifications').delete().eq('user_id', userId).eq('is_demo', true);
+      try {
+        const { error: repErr } = await this.supabase!.from('reports').delete().eq('user_id', userId).eq('is_demo', true);
+        if (repErr) console.warn('[Database] Failed to clear demo reports in Supabase (possibly missing is_demo):', repErr.message);
+
+        const { error: upErr } = await this.supabase!.from('uploads').delete().eq('user_id', userId).eq('is_demo', true);
+        if (upErr) console.warn('[Database] Failed to clear demo uploads in Supabase (possibly missing is_demo):', upErr.message);
+
+        const { error: notifErr } = await this.supabase!.from('notifications').delete().eq('user_id', userId).eq('is_demo', true);
+        if (notifErr) console.warn('[Database] Failed to clear demo notifications in Supabase (possibly missing is_demo):', notifErr.message);
+      } catch (err: any) {
+        console.error('[Database] Failed to run Supabase demo data cleanup:', err.message);
+      }
 
       const uploads = await this.getUploadsByUser(userId);
       const newStorageUsed = uploads.reduce((sum, u) => sum + u.file_size, 0);
@@ -1131,33 +1159,42 @@ class ThreadCountyDatabase {
       console.log(`[Demo Worker] Completed local cleanup. Purged ${expiredUploads.length} uploads.`);
     } else {
       // Supabase cleanups (cascade deleted triggers or sequential deletes)
-      const { data: expiredReports } = await this.supabase!
-        .from('reports')
-        .select('id, upload_id, user_id')
-        .eq('is_demo', true)
-        .lte('expires_at', now);
+      try {
+        const { data: expiredReports, error: fetchErr } = await this.supabase!
+          .from('reports')
+          .select('id, upload_id, user_id')
+          .eq('is_demo', true)
+          .lte('expires_at', now);
 
-      if (expiredReports && expiredReports.length > 0) {
-        const reportIds = expiredReports.map(r => r.id);
-        const uploadIds = expiredReports.map(r => r.upload_id);
-        const userIds = Array.from(new Set(expiredReports.map(r => r.user_id)));
-
-        await this.supabase!.from('reports').delete().in('id', reportIds);
-        await this.supabase!.from('uploads').delete().in('id', uploadIds);
-        await this.supabase!.from('notifications').delete().eq('is_demo', true).lte('expires_at', now);
-        await this.supabase!.from('contact_messages').delete().eq('is_demo', true).lte('expires_at', now);
-        await this.supabase!.from('profiles').delete().eq('is_demo', true).lte('expires_at', now);
-
-        // Recalculate storage
-        for (const uid of userIds) {
-          const uploads = await this.getUploadsByUser(uid);
-          const newStorageUsed = uploads.reduce((sum, u) => sum + u.file_size, 0);
-          await this.supabase!
-            .from('profiles')
-            .update({ storage_used: newStorageUsed })
-            .eq('id', uid);
+        if (fetchErr) {
+          console.warn('[Demo Worker] Failed to fetch expired demo reports (likely missing is_demo/expires_at columns):', fetchErr.message);
+          return;
         }
-        console.log(`[Demo Worker] Completed Supabase cleanup. Purged ${expiredReports.length} reports.`);
+
+        if (expiredReports && expiredReports.length > 0) {
+          const reportIds = expiredReports.map(r => r.id);
+          const uploadIds = expiredReports.map(r => r.upload_id);
+          const userIds = Array.from(new Set(expiredReports.map(r => r.user_id)));
+
+          await this.supabase!.from('reports').delete().in('id', reportIds);
+          await this.supabase!.from('uploads').delete().in('id', uploadIds);
+          await this.supabase!.from('notifications').delete().eq('is_demo', true).lte('expires_at', now);
+          await this.supabase!.from('contact_messages').delete().eq('is_demo', true).lte('expires_at', now);
+          await this.supabase!.from('profiles').delete().eq('is_demo', true).lte('expires_at', now);
+
+          // Recalculate storage
+          for (const uid of userIds) {
+            const uploads = await this.getUploadsByUser(uid);
+            const newStorageUsed = uploads.reduce((sum, u) => sum + u.file_size, 0);
+            await this.supabase!
+              .from('profiles')
+              .update({ storage_used: newStorageUsed })
+              .eq('id', uid);
+          }
+          console.log(`[Demo Worker] Completed Supabase cleanup. Purged ${expiredReports.length} reports.`);
+        }
+      } catch (err: any) {
+        console.error('[Demo Worker] Error cleaning up expired demo data:', err.message);
       }
     }
   }

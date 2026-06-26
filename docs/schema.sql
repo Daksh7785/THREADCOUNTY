@@ -1,15 +1,41 @@
 -- ThreadCounty Database Schema Setup
 -- Target Engine: PostgreSQL / Supabase
--- Date: 2026-06-24
+-- Date: 2026-06-26
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ==========================================
--- 1. PROFILES TABLE (Extends Supabase Auth users)
+-- 0. USERS AUTH TABLE (Custom Node.js Backend Auth)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.users_auth (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Indexes for users_auth
+CREATE INDEX IF NOT EXISTS idx_users_auth_email ON public.users_auth(email);
+
+-- Enable RLS on users_auth
+ALTER TABLE public.users_auth ENABLE ROW LEVEL SECURITY;
+
+-- users_auth Policies
+CREATE POLICY "Admins can manage all auth records" 
+    ON public.users_auth FOR ALL 
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- ==========================================
+-- 1. PROFILES TABLE (User metadata & status)
 -- ==========================================
 CREATE TABLE public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY REFERENCES public.users_auth(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     company VARCHAR(255) DEFAULT '',
@@ -17,6 +43,8 @@ CREATE TABLE public.profiles (
     role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     plan VARCHAR(50) DEFAULT 'Free' CHECK (plan IN ('Free', 'Student', 'Professional', 'Enterprise')),
     storage_used BIGINT DEFAULT 0 CHECK (storage_used >= 0),
+    is_demo BOOLEAN DEFAULT false,
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -55,6 +83,8 @@ CREATE TABLE public.uploads (
     original_name VARCHAR(255) NOT NULL,
     file_size BIGINT NOT NULL CHECK (file_size > 0),
     file_path TEXT NOT NULL,
+    is_demo BOOLEAN DEFAULT false,
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -100,6 +130,8 @@ CREATE TABLE public.reports (
     fabric_type VARCHAR(100) NOT NULL,
     confidence NUMERIC(4,3) NOT NULL CHECK (confidence >= 0.0 AND confidence <= 1.0),
     suggestions TEXT[] DEFAULT '{}'::TEXT[] NOT NULL,
+    is_demo BOOLEAN DEFAULT false,
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -141,6 +173,8 @@ CREATE TABLE public.contact_messages (
     email VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
+    is_demo BOOLEAN DEFAULT false,
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -171,6 +205,8 @@ CREATE TABLE public.notifications (
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT false NOT NULL,
+    is_demo BOOLEAN DEFAULT false,
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
