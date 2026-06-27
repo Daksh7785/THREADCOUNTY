@@ -175,8 +175,32 @@ export const AnalysisResultPage: React.FC = () => {
             
             {showScannerGrid && (
               <>
-                <div className="absolute inset-0 analysis-grid-overlay opacity-60"></div>
+                <div className="absolute inset-0 analysis-grid-overlay opacity-25"></div>
                 <div className="absolute inset-x-0 scanning-line pointer-events-none"></div>
+                
+                {/* Horizontal Weft Thread Trackers */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div 
+                    key={`weft-${i}`}
+                    className="absolute left-0 right-0 border-t border-dashed border-sky-400/60 pointer-events-none flex justify-between items-center px-2"
+                    style={{ top: `${15 + i * 10}%` }}
+                  >
+                    <span className="text-[7px] font-mono font-bold text-sky-300 bg-slate-950/70 px-0.5 rounded scale-75 select-none">F{(i+1)*10}</span>
+                    <span className="text-[7px] font-mono font-bold text-sky-300 bg-slate-950/70 px-0.5 rounded scale-75 select-none">F{(i+1)*10}</span>
+                  </div>
+                ))}
+                
+                {/* Vertical Warp Thread Trackers */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div 
+                    key={`warp-${i}`}
+                    className="absolute top-0 bottom-0 border-l border-dashed border-rose-400/60 pointer-events-none flex flex-col justify-between items-center py-2"
+                    style={{ left: `${15 + i * 10}%` }}
+                  >
+                    <span className="text-[7px] font-mono font-bold text-rose-300 bg-slate-950/70 px-0.5 rounded scale-75 select-none">W{(i+1)*10}</span>
+                    <span className="text-[7px] font-mono font-bold text-rose-300 bg-slate-950/70 px-0.5 rounded scale-75 select-none">W{(i+1)*10}</span>
+                  </div>
+                ))}
               </>
             )}
           </div>
