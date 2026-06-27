@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -73,6 +74,33 @@ app.use('/uploads', express.static(UPLOADS_DIR_READONLY));
 
 app.use('/backend/uploads', express.static(UPLOADS_DIR_TMP));
 app.use('/backend/uploads', express.static(UPLOADS_DIR_READONLY));
+
+// Fallback for missing uploads (serves matching seed images if actual files are missing)
+const handleUploadFallback = (req: Request, res: Response, next: NextFunction) => {
+  const filename = path.basename(req.path).toLowerCase();
+  let fallbackFile = 'sample_cotton.png';
+  if (filename.includes('denim')) {
+    fallbackFile = 'sample_denim.png';
+  } else if (filename.includes('linen')) {
+    fallbackFile = 'sample_linen.png';
+  } else if (filename.includes('wool')) {
+    fallbackFile = 'sample_wool.png';
+  } else if (filename.includes('silk')) {
+    fallbackFile = 'sample_silk.png';
+  } else if (filename.includes('canvas')) {
+    fallbackFile = 'sample_wool.png';
+  }
+  
+  const fallbackPath = path.join(UPLOADS_DIR_READONLY, fallbackFile);
+  if (fs.existsSync(fallbackPath)) {
+    res.sendFile(fallbackPath);
+  } else {
+    next();
+  }
+};
+
+app.use('/uploads', handleUploadFallback);
+app.use('/backend/uploads', handleUploadFallback);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
