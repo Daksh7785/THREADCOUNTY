@@ -56,16 +56,16 @@ export class ReportGenerator {
 
       doc
         .fontSize(10)
-        .text(new Date().toLocaleString(), { align: 'right' })
-        .moveDown(0);
+        .text(new Date().toLocaleString(), 50, 48, { align: 'right', width: 495 });
 
-      // ── Metadata ─────────────────────────────────────────────────────────────
-      doc.fillColor('#1e293b').moveDown(2);
+      // ── Metadata & Image Side-by-Side ─────────────────────────────────────────
+      doc.fillColor('#1e293b').y = 110;
+      const metaY = doc.y;
 
-      doc.fontSize(13).font('Helvetica-Bold').text('Report Details', 50);
-      doc.moveTo(50, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#e2e8f0').stroke();
-      doc.moveDown(0.4);
-
+      // Left Column: Details Header & Metadata
+      doc.fontSize(13).font('Helvetica-Bold').text('Report Details', 50, metaY);
+      doc.moveTo(50, metaY + 18).lineTo(320, metaY + 18).strokeColor('#e2e8f0').stroke();
+      
       const metaRows = [
         ['Report ID', report.id],
         ['Filename', upload.original_name],
@@ -73,18 +73,66 @@ export class ReportGenerator {
         ['Analysis Date', new Date(report.created_at).toLocaleString()],
       ];
 
-      doc.fontSize(10).font('Helvetica');
+      let currentMetaY = metaY + 28;
+      doc.fontSize(10);
       for (const [label, value] of metaRows) {
         doc
           .fillColor('#64748b')
-          .text(label + ':', 50, doc.y, { continued: true, width: 150 })
+          .font('Helvetica-Bold')
+          .text(label + ':', 50, currentMetaY, { width: 100 });
+        doc
           .fillColor('#0f172a')
-          .text(value, { indent: 10 });
+          .font('Helvetica')
+          .text(value, 150, currentMetaY, { width: 170 });
+        currentMetaY += 18;
       }
 
-      doc.moveDown(1);
+      // Right Column: Image Preview
+      const possibleImagePaths = [
+        path.resolve(upload.file_path),
+        path.join(__dirname, '..', '..', upload.file_path),
+        path.join(__dirname, '..', '..', 'uploads', path.basename(upload.file_path)),
+      ];
+      let imagePathToUse = '';
+      for (const p of possibleImagePaths) {
+        if (fs.existsSync(p)) {
+          imagePathToUse = p;
+          break;
+        }
+      }
 
-      // ── Analysis Results ─────────────────────────────────────────────────────
+      if (imagePathToUse) {
+        try {
+          doc.image(imagePathToUse, 360, metaY, {
+            fit: [185, 110],
+            align: 'center',
+            valign: 'center'
+          });
+          // Draw a light border around the image
+          doc
+            .rect(360, metaY, 185, 110)
+            .strokeColor('#cbd5e1')
+            .lineWidth(1)
+            .stroke();
+        } catch (imgErr) {
+          console.error('[ReportGenerator] Failed to embed image in PDF:', imgErr);
+        }
+      } else {
+        // Fallback placeholder box
+        doc
+          .rect(360, metaY, 185, 110)
+          .fillAndStroke('#f8fafc', '#cbd5e1');
+        doc
+          .fillColor('#94a3b8')
+          .font('Helvetica')
+          .fontSize(9)
+          .text('Image Preview Unavailable', 360, metaY + 48, { width: 185, align: 'center' });
+      }
+
+      // Advance cursor below metadata and image block
+      doc.y = metaY + 130;
+
+      // ── Analysis Results Table ───────────────────────────────────────────────
       doc.fontSize(13).font('Helvetica-Bold').fillColor('#1e293b').text('Analysis Results', 50);
       doc.moveTo(50, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#e2e8f0').stroke();
       doc.moveDown(0.5);
@@ -140,8 +188,7 @@ export class ReportGenerator {
         rowY += rowH;
       }
 
-      doc.y = rowY + 10;
-      doc.moveDown(1);
+      doc.y = rowY + 15;
 
       // ── AI Suggestions ───────────────────────────────────────────────────────
       if (report.suggestions && report.suggestions.length > 0) {
@@ -151,22 +198,42 @@ export class ReportGenerator {
           .fillColor('#1e293b')
           .text('AI Quality Control Recommendations', 50);
         doc.moveTo(50, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#e2e8f0').stroke();
-        doc.moveDown(0.5);
+        doc.moveDown(0.6);
 
+        let currentSuggestionY = doc.y;
         report.suggestions.forEach((s, i) => {
-          // Bullet marker
           doc
-            .circle(60, doc.y + 5, 3)
+            .circle(60, currentSuggestionY + 6, 3.5)
             .fill('#4f46e5');
 
           doc
             .fillColor('#334155')
             .font('Helvetica')
             .fontSize(10)
-            .text(`${i + 1}. ${s}`, 72, doc.y - 8, { width: 468 });
+            .text(`${s}`, 72, currentSuggestionY, { width: 468 });
 
-          doc.moveDown(0.4);
+          const textHeight = doc.heightOfString(s, { width: 468 });
+          currentSuggestionY += Math.max(textHeight + 12, 22);
         });
+        doc.y = currentSuggestionY;
+      }
+
+      // ── OCR Detected Text Section ────────────────────────────────────────────
+      if (report.ocr_text && report.ocr_text.trim()) {
+        doc.moveDown(1.5);
+        doc
+          .fontSize(13)
+          .font('Helvetica-Bold')
+          .fillColor('#1e293b')
+          .text('OCR Detected Text', 50);
+        doc.moveTo(50, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#e2e8f0').stroke();
+        doc.moveDown(0.6);
+
+        doc
+          .fillColor('#475569')
+          .font('Courier')
+          .fontSize(9.5)
+          .text(report.ocr_text.trim(), 60, doc.y, { width: 480, lineGap: 2 });
       }
 
       // ── Footer ───────────────────────────────────────────────────────────────
