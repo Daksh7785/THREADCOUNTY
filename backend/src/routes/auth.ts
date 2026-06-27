@@ -14,21 +14,12 @@ const router = Router();
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// ── In-memory OTP store (keyed by email, clears on use or expiry) ────────────
-// In production this would be Redis or a DB table.
-interface OTPRecord {
-  otp: string;
-  expiresAt: number; // Unix ms
-  attempts: number;
-}
-const otpStore = new Map<string, OTPRecord>();
-
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
 }
 
-function isOTPValid(record: OTPRecord, otp: string): boolean {
-  if (Date.now() > record.expiresAt) return false;
+function isOTPValid(record: { otp: string; expires_at: string; attempts: number }, otp: string): boolean {
+  if (Date.now() > new Date(record.expires_at).getTime()) return false;
   if (record.attempts >= 5) return false;
   return record.otp === otp;
 }
@@ -259,8 +250,7 @@ router.post('/forgot-password', validateRequest(schemas.forgotPassword) as any, 
 
     const otp = generateOTP();
     const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-    otpStore.set(email.toLowerCase(), { otp, expiresAt, attempts: 0 });
+    await db.storeOTP(email, otp, expiresAt);
 
     // Send the OTP via Resend
     const sent = await sendPasswordResetOTP(email, user.name, otp);
@@ -291,7 +281,7 @@ router.post('/reset-password', validateRequest(schemas.resetPassword) as any, as
     const { email, code, newPassword } = req.validated;
 
     const key = email.toLowerCase();
-    const record = otpStore.get(key);
+    const record = await db.getOTP(key);
 
     if (!record) {
       res.status(400).json({ error: 'No reset code found for this email. Please request a new one.' });
@@ -299,29 +289,29 @@ router.post('/reset-password', validateRequest(schemas.resetPassword) as any, as
     }
 
     // Increment attempts before checking
-    record.attempts += 1;
+    const attempts = await db.incrementOTPAttempts(key);
 
-    if (Date.now() > record.expiresAt) {
-      otpStore.delete(key);
+    if (Date.now() > new Date(record.expires_at).getTime()) {
+      await db.deleteOTP(key);
       res.status(400).json({ error: 'Reset code has expired. Please request a new one.' });
       return;
     }
 
-    if (record.attempts > 5) {
-      otpStore.delete(key);
+    if (attempts > 5) {
+      await db.deleteOTP(key);
       res.status(429).json({ error: 'Too many incorrect attempts. Please request a new reset code.' });
       return;
     }
 
     if (record.otp !== code.trim()) {
       res.status(400).json({
-        error: `Invalid verification code. ${5 - record.attempts} attempt(s) remaining.`
+        error: `Invalid verification code. ${5 - attempts} attempt(s) remaining.`
       });
       return;
     }
 
     // OTP verified — delete it immediately (one-time use)
-    otpStore.delete(key);
+    await db.deleteOTP(key);
 
     const user = await db.getProfileByEmail(email);
     if (!user) {
@@ -358,8 +348,8 @@ router.post('/verify-otp', async (req, res: Response) => {
       return;
     }
 
-    const record = otpStore.get(email.toLowerCase());
-    if (!record || Date.now() > record.expiresAt || record.otp !== code.trim()) {
+    const record = await db.getOTP(email.toLowerCase());
+    if (!record || Date.now() > new Date(record.expires_at).getTime() || record.otp !== code.trim()) {
       res.status(400).json({ valid: false, error: 'Invalid or expired code.' });
       return;
     }
@@ -382,7 +372,7 @@ router.post('/verify-email', async (req, res: Response) => {
       return;
     }
 
-    const record = otpStore.get(email.toLowerCase());
+    const record = await db.getOTP(email.toLowerCase());
     if (!record || !isOTPValid(record, code)) {
       res.status(400).json({ error: 'Invalid or expired verification code.' });
       return;

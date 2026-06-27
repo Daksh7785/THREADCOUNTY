@@ -20,7 +20,7 @@ import adminSettingsRouter from './routes/adminSettings';
 import demoRouter from './routes/demo';
 import chatRouter from './routes/chat';
 import notificationsRouter from './routes/notifications';
-import { requestLogger } from './middleware/logger';
+import { requestLogger, logger } from './middleware/logger';
 import { authRateLimiter, uploadRateLimiter, contactRateLimiter } from './middleware/rateLimiter';
 import { corsOptions } from './config/cors';
 import db from './models/db';
@@ -29,7 +29,18 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Security headers (helmet)
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      connectSrc: ["'self'", process.env.FRONTEND_URL || ''],
+    }
+  } : false  // Disable CSP in development
+}));
 app.use(helmet.frameguard({ action: 'deny' }));
 app.use(helmet.noSniff());
 
@@ -85,40 +96,44 @@ app.get('/', (req: Request, res: Response) => {
 
 // SEO robots.txt and sitemap.xml endpoints
 app.get('/robots.txt', (req: Request, res: Response) => {
+  const host = req.get('host') || 'localhost:5000';
+  const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+  const API_URL = `${protocol}://${host}`;
   res.type('text/plain');
-  res.send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /dashboard/\nSitemap: http://localhost:5000/sitemap.xml`);
+  res.send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\nDisallow: /dashboard/\nSitemap: ${API_URL}/sitemap.xml`);
 });
 
 app.get('/sitemap.xml', (req: Request, res: Response) => {
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
   res.type('application/xml');
   res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://localhost:5173/</loc>
+    <loc>${FRONTEND_URL}/</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>http://localhost:5173/about</loc>
+    <loc>${FRONTEND_URL}/about</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>http://localhost:5173/pricing</loc>
+    <loc>${FRONTEND_URL}/pricing</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>http://localhost:5173/faq</loc>
+    <loc>${FRONTEND_URL}/faq</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>http://localhost:5173/contact</loc>
+    <loc>${FRONTEND_URL}/contact</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -142,9 +157,11 @@ app.use('/api/notifications', notificationsRouter);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('[Error Handler]', err);
+  const isDev = process.env.NODE_ENV !== 'production';
+  logger.error('[Error Handler]', { message: err.message, stack: isDev ? err.stack : undefined });
   res.status(err.status || 500).json({
-    error: err.message || 'Internal server error occurred.'
+    error: isDev ? err.message : 'An unexpected error occurred.',
+    ...(isDev && { stack: err.stack })
   });
 });
 

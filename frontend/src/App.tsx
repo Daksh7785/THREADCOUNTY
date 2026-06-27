@@ -30,9 +30,12 @@ const AnalysisResultPage = React.lazy(() => import('./pages/AnalysisResultPage')
 const HistoryPage = React.lazy(() => import('./pages/HistoryPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const AdminUploads = React.lazy(() => import('./pages/AdminUploads'));
+const AdminSettings = React.lazy(() => import('./pages/AdminSettings'));
 const ComparePage = React.lazy(() => import('./pages/ComparePage'));
 import CookieConsent from './components/CookieConsent';
 import AIChatbot from './components/AIChatbot';
+
 
 // CSS Imports
 import './App.css';
@@ -188,6 +191,22 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/uploads" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminUploads />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/settings" 
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminSettings />
                   </ProtectedRoute>
                 } 
               />

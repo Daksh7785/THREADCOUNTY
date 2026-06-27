@@ -41,6 +41,11 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [token]);
 
+  // Close mobile drawer on route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const fetchNotifications = async () => {
     try {
       const res = await fetch(`${API_URL}/dashboard/stats`, {

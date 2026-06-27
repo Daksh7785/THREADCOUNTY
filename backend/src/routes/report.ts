@@ -46,7 +46,7 @@ const FABRIC_SUGGESTIONS: { [key: string]: string[] } = {
 // @desc    Analyze uploaded image & generate report using Gemini Vision AI
 router.post('/analyze', async (req: AuthRequest, res: Response) => {
   try {
-    const { uploadId } = req.body;
+    const { uploadId, ocr_text } = req.body;
     if (!uploadId) {
        res.status(400).json({ error: 'Upload ID is required.' });
        return;
@@ -243,7 +243,8 @@ Base your analysis on visible thread patterns, weave structure, fiber texture, a
       weft,
       fabricType,
       parseFloat(confidence.toFixed(3)),
-      suggestions
+      suggestions,
+      ocr_text
     );
 
     // Create system notification

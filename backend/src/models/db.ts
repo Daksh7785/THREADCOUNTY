@@ -40,6 +40,7 @@ export interface Report {
   fabric_type: string;
   confidence: number; // e.g. 0.96
   suggestions: string[];
+  ocr_text?: string;
   created_at: string;
   is_demo?: boolean;
   expires_at?: string;
@@ -83,6 +84,13 @@ export interface AuditLog {
   timestamp: string;
 }
 
+export interface OtpRecord {
+  email: string;
+  otp: string;
+  expires_at: string;
+  attempts: number;
+}
+
 // Local db file path
 const DATA_DIR = process.env.VERCEL 
   ? '/tmp' 
@@ -100,6 +108,7 @@ interface LocalDatabase {
   notifications: Notification[];
   notification_preferences?: NotificationPreferences[];
   audit_logs?: AuditLog[];
+  otp_records?: OtpRecord[];
 }
 
 class ThreadCountyDatabase {
@@ -113,7 +122,8 @@ class ThreadCountyDatabase {
     contact_messages: [],
     notifications: [],
     notification_preferences: [],
-    audit_logs: []
+    audit_logs: [],
+    otp_records: []
   };
 
   private dataLoaded = false;
@@ -174,6 +184,10 @@ class ThreadCountyDatabase {
 
   // --- LOCAL SANDBOX INITIALIZATION ---
   private async initLocalDb() {
+    if (process.env.NODE_ENV === 'test') {
+      this.createSeedData();
+      return;
+    }
     const KV_DB_URL = 'https://kvdb.io/tcdakshbucket92929292/db';
     try {
       const res = await fetch(KV_DB_URL);
@@ -434,6 +448,103 @@ class ThreadCountyDatabase {
 
   // --- PUBLIC API WRAPPER METHODS ---
 
+  // OTP Storage & Verification (Persistent to avoid serverless cold-start issues)
+  public async storeOTP(email: string, otp: string, expiresAt: number): Promise<void> {
+    const key = email.toLowerCase();
+    if (this.isLocalMode) {
+      if (!this.localData.otp_records) {
+        this.localData.otp_records = [];
+      }
+      // Remove existing for same email
+      this.localData.otp_records = this.localData.otp_records.filter(r => r.email.toLowerCase() !== key);
+      this.localData.otp_records.push({
+        email: key,
+        otp,
+        expires_at: new Date(expiresAt).toISOString(),
+        attempts: 0
+      });
+      await this.saveLocalDb();
+    } else {
+      const { error } = await this.supabase!
+        .from('password_reset_otps')
+        .upsert({
+          email: key,
+          otp_hash: otp,
+          expires_at: new Date(expiresAt).toISOString(),
+          attempts: 0
+        }, { onConflict: 'email' });
+      if (error) {
+        console.error('[Database] Failed to store OTP in Supabase:', error);
+      }
+    }
+  }
+
+  public async getOTP(email: string): Promise<OtpRecord | null> {
+    const key = email.toLowerCase();
+    if (this.isLocalMode) {
+      if (!this.localData.otp_records) {
+        return null;
+      }
+      const record = this.localData.otp_records.find(r => r.email.toLowerCase() === key);
+      return record || null;
+    } else {
+      const { data, error } = await this.supabase!
+        .from('password_reset_otps')
+        .select('*')
+        .eq('email', key)
+        .single();
+      if (error || !data) return null;
+      return {
+        email: data.email,
+        otp: data.otp_hash,
+        expires_at: data.expires_at,
+        attempts: data.attempts
+      };
+    }
+  }
+
+  public async incrementOTPAttempts(email: string): Promise<number> {
+    const key = email.toLowerCase();
+    if (this.isLocalMode) {
+      if (!this.localData.otp_records) return 0;
+      const record = this.localData.otp_records.find(r => r.email.toLowerCase() === key);
+      if (!record) return 0;
+      record.attempts += 1;
+      await this.saveLocalDb();
+      return record.attempts;
+    } else {
+      const current = await this.getOTP(key);
+      if (!current) return 0;
+      const newAttempts = current.attempts + 1;
+      const { error } = await this.supabase!
+        .from('password_reset_otps')
+        .update({ attempts: newAttempts })
+        .eq('email', key);
+      if (error) {
+        console.error('[Database] Failed to update OTP attempts:', error);
+      }
+      return newAttempts;
+    }
+  }
+
+  public async deleteOTP(email: string): Promise<void> {
+    const key = email.toLowerCase();
+    if (this.isLocalMode) {
+      if (this.localData.otp_records) {
+        this.localData.otp_records = this.localData.otp_records.filter(r => r.email.toLowerCase() !== key);
+        await this.saveLocalDb();
+      }
+    } else {
+      const { error } = await this.supabase!
+        .from('password_reset_otps')
+        .delete()
+        .eq('email', key);
+      if (error) {
+        console.error('[Database] Failed to delete OTP:', error);
+      }
+    }
+  }
+
   // User Auth & Profiles
   public async getProfileByEmail(email: string): Promise<Profile | null> {
     if (this.isLocalMode) {
@@ -650,7 +761,7 @@ class ThreadCountyDatabase {
   }
 
   // Reports
-  public async createReport(uploadId: string, userId: string, warpCount: number, weftCount: number, fabricType: string, confidence: number, suggestions: string[]): Promise<Report> {
+  public async createReport(uploadId: string, userId: string, warpCount: number, weftCount: number, fabricType: string, confidence: number, suggestions: string[], ocrText?: string): Promise<Report> {
     const id = this.isLocalMode ? 'rep-' + Math.random().toString(36).substr(2, 9) : randomUUID();
     const newReport: Report = {
       id,
@@ -662,6 +773,7 @@ class ThreadCountyDatabase {
       fabric_type: fabricType,
       confidence,
       suggestions,
+      ocr_text: ocrText,
       created_at: new Date().toISOString()
     };
 

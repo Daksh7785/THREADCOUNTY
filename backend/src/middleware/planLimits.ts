@@ -1,14 +1,7 @@
 import { AuthRequest } from '../middleware/auth';
 import { Response, NextFunction } from 'express';
 import db from '../models/db';
-
-// Plan feature limits
-const PLAN_LIMITS: Record<string, { uploadsPerMonth: number | null; storageGB: number | null }> = {
-  Free:         { uploadsPerMonth: 10,   storageGB: 0.1 },
-  Student:      { uploadsPerMonth: 50,   storageGB: 1 },
-  Professional: { uploadsPerMonth: null, storageGB: 10 },
-  Enterprise:   { uploadsPerMonth: null, storageGB: null },
-};
+import { getSettings } from '../routes/adminSettings';
 
 /**
  * Middleware: reject upload if user has exceeded their monthly upload limit.
@@ -25,9 +18,10 @@ export const checkUploadLimit = async (
       return;
     }
 
-    const limits = PLAN_LIMITS[user.plan] ?? PLAN_LIMITS['Free'];
+    const settings = getSettings();
+    const limits = settings.planLimits[user.plan as keyof typeof settings.planLimits] ?? settings.planLimits['Free'];
 
-    if (limits.uploadsPerMonth === null) {
+    if (limits.maxUploads === null || limits.maxUploads === undefined) {
       // Unlimited
       return next();
     }
@@ -42,12 +36,12 @@ export const checkUploadLimit = async (
       (u) => !u.is_demo && new Date(u.created_at) >= monthStart
     ).length;
 
-    if (monthlyCount >= limits.uploadsPerMonth) {
+    if (monthlyCount >= limits.maxUploads) {
       res.status(429).json({
         error: 'Monthly upload limit reached.',
-        message: `Your ${user.plan} plan allows ${limits.uploadsPerMonth} uploads per month. Upgrade to upload more.`,
+        message: `Your ${user.plan} plan allows ${limits.maxUploads} uploads per month. Upgrade to upload more.`,
         uploadCount: monthlyCount,
-        limit: limits.uploadsPerMonth,
+        limit: limits.maxUploads,
       });
       return;
     }
@@ -74,17 +68,18 @@ export const checkStorageLimit = async (
       return;
     }
 
-    const limits = PLAN_LIMITS[user.plan] ?? PLAN_LIMITS['Free'];
+    const settings = getSettings();
+    const limits = settings.planLimits[user.plan as keyof typeof settings.planLimits] ?? settings.planLimits['Free'];
 
-    if (limits.storageGB === null) {
+    if (limits.storageCap === null || limits.storageCap === undefined) {
       return next();
     }
 
-    const storageLimit = limits.storageGB * 1024 * 1024 * 1024; // bytes
+    const storageLimit = limits.storageCap * 1024 * 1024 * 1024; // bytes
     if (user.storage_used >= storageLimit) {
       res.status(429).json({
         error: 'Storage limit exceeded.',
-        message: `Your ${user.plan} plan includes ${limits.storageGB}GB of storage. Upgrade for more space.`,
+        message: `Your ${user.plan} plan includes ${limits.storageCap}GB of storage. Upgrade for more space.`,
         storageUsed: user.storage_used,
         storageLimit,
       });
@@ -96,3 +91,4 @@ export const checkStorageLimit = async (
     next();
   }
 };
+

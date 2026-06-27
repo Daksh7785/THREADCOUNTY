@@ -239,3 +239,24 @@ BEGIN
   WHERE id = user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ==========================================
+-- 7. PASSWORD RESET OTPS TABLE
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.password_reset_otps (
+    email VARCHAR(255) PRIMARY KEY,
+    otp_hash VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    attempts INTEGER DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Index for password_reset_otps
+CREATE INDEX IF NOT EXISTS idx_password_reset_otps_email ON public.password_reset_otps(email);
+
+-- Enable RLS on password_reset_otps
+ALTER TABLE public.password_reset_otps ENABLE ROW LEVEL SECURITY;
+
+-- Allow insert/update/select/delete for auth operations (the server role accesses this)
+CREATE POLICY "Enable all actions for authenticated backend service" ON public.password_reset_otps FOR ALL USING (true);
+

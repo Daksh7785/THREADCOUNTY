@@ -3,6 +3,7 @@ import { API_URL, API } from '../config';
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Tesseract from 'tesseract.js';
 import { 
   UploadCloud, 
   FileImage, 
@@ -10,7 +11,8 @@ import {
   AlertCircle,
   Binary,
   CheckCircle,
-  Sparkles
+  Sparkles,
+  FileText
 } from 'lucide-react';
 
 export const UploadPage: React.FC = () => {
@@ -23,6 +25,10 @@ export const UploadPage: React.FC = () => {
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'analyzing' | 'complete'>('idle');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  
+  const [ocrText, setOcrText] = useState<string>('');
+  const [ocrLoading, setOcrLoading] = useState<boolean>(false);
+  const [extractOcr, setExtractOcr] = useState<boolean>(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -160,13 +166,30 @@ export const UploadPage: React.FC = () => {
       }, 400);
 
       // Call report analyzer endpoint
+      let ocrExtracted = '';
+      if (extractOcr) {
+        try {
+          const ocrResult = await Tesseract.recognize(
+            file,
+            'eng'
+          );
+          ocrExtracted = ocrResult.data.text;
+          setOcrText(ocrExtracted);
+        } catch (ocrErr) {
+          console.error('[OCR] Failed to extract text:', ocrErr);
+        }
+      }
+
       const reportRes = await fetch(`${API_URL}/report/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ uploadId: uploadData.upload.id })
+        body: JSON.stringify({ 
+          uploadId: uploadData.upload.id,
+          ocr_text: ocrExtracted
+        })
       });
 
       clearInterval(analysisInterval);
@@ -277,6 +300,21 @@ export const UploadPage: React.FC = () => {
             {/* Thumbnail Preview Box */}
             <div className="aspect-[4/3] w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 relative flex items-center justify-center">
               <img src={previewUrl} alt="Fabric preview" className="h-full w-full object-cover" />
+            </div>
+
+            {/* OCR Toggle */}
+            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
+              <input
+                id="extract-ocr"
+                type="checkbox"
+                checked={extractOcr}
+                onChange={(e) => setExtractOcr(e.target.checked)}
+                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 accent-indigo-600 cursor-pointer"
+              />
+              <label htmlFor="extract-ocr" className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                <FileText className="h-4 w-4 text-indigo-500" />
+                <span>Extract Label & Batch Text (Client-side OCR)</span>
+              </label>
             </div>
 
             <button 

@@ -59,19 +59,19 @@ function createLimiter(options: RateLimitOptions, byUser = false) {
 
 // ─── Named limiters for specific route groups ────────────────────────────────
 
-/** Auth routes: 10 attempts per 5 minutes per IP (prevents brute-force login) */
+/** Auth routes: 10 attempts per 15 minutes per IP (prevents brute-force login) */
 export const authRateLimiter = createLimiter({
   limit: 10,
-  windowMs: 5 * 60 * 1000,
-  description: 'max 10 auth requests per 5 minutes per IP'
+  windowMs: 15 * 60 * 1000,
+  description: 'max 10 auth requests per 15 minutes per IP'
 }, false);
 
-/** Upload route: 15 uploads per minute per user (prevents storage abuse) */
+/** Upload route: 20 uploads per hour per IP (prevents storage abuse) */
 export const uploadRateLimiter = createLimiter({
-  limit: 15,
-  windowMs: 60 * 1000,
-  description: 'max 15 uploads per minute per user'
-}, true);
+  limit: 20,
+  windowMs: 60 * 60 * 1000,
+  description: 'max 20 uploads per hour per IP'
+}, false);
 
 /** Contact form: 5 submissions per hour per IP (prevents spam) */
 export const contactRateLimiter = createLimiter({

@@ -54,7 +54,9 @@ export const SignupPage: React.FC = () => {
     setError('');
     if (!name || !email || !password || !confirmPassword) { setError('Please fill in all required fields.'); return; }
     if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
-    if (passwordRules.filter(r => r.test(password)).length < 3) { setError('Password is too weak. Please follow the requirements.'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters long.'); return; }
+    if (!/[A-Z]/.test(password)) { setError('Password must contain at least one uppercase letter.'); return; }
+    if (!/\d/.test(password)) { setError('Password must contain at least one number.'); return; }
     if (!termsAccepted || !privacyAccepted) { setError('You must accept the Terms of Service and Privacy Policy.'); return; }
 
     setLoading(true);

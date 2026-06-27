@@ -43,6 +43,10 @@ export const AnalysisResultPage: React.FC = () => {
       if (res.ok) {
         const reportData = await res.json();
         setData(reportData);
+        if (reportData.report && reportData.report.ocr_text) {
+          setOcrText(reportData.report.ocr_text);
+          setOcrDone(true);
+        }
       }
     } catch (err) {
       console.error('Error fetching report details:', err);
@@ -51,13 +55,29 @@ export const AnalysisResultPage: React.FC = () => {
     }
   };
 
-  const copyShareLink = () => {
+  const copyShareLink = async () => {
     const sharableUrl = `${window.location.origin}/report/${id}`;
-    navigator.clipboard.writeText(sharableUrl);
-    setShareCopied(true);
-    setTimeout(() => {
-      setShareCopied(false);
-    }, 2000);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'ThreadCounty Fabric Analysis Report',
+          text: `Check out the thread density analysis for ${data?.upload?.original_name || 'fabric swatch'}.`,
+          url: sharableUrl
+        });
+      } catch (err) {
+        console.warn('Share failed or cancelled:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(sharableUrl);
+        setShareCopied(true);
+        setTimeout(() => {
+          setShareCopied(false);
+        }, 2000);
+      } catch (err) {
+        console.error('Clipboard copy failed:', err);
+      }
+    }
   };
 
   if (loading) {

@@ -3,14 +3,16 @@ import path from 'path';
 import fs from 'fs';
 import { Report, Upload } from '../models/db';
 
-const REPORTS_DIR = path.join(__dirname, '..', '..', 'reports');
+const REPORTS_DIR = process.env.VERCEL
+  ? path.join('/tmp', 'reports')
+  : path.join(__dirname, '..', '..', 'reports');
 
 function ensureReportsDir() {
   if (!fs.existsSync(REPORTS_DIR)) {
     try {
       fs.mkdirSync(REPORTS_DIR, { recursive: true });
-    } catch {
-      // Serverless — will use /tmp
+    } catch (err) {
+      console.warn('[ReportGenerator] Failed to create reports directory:', err);
     }
   }
 }
@@ -20,13 +22,14 @@ export class ReportGenerator {
 
   constructor() {
     ensureReportsDir();
-    this.outputDir = fs.existsSync(REPORTS_DIR) ? REPORTS_DIR : '/tmp';
+    this.outputDir = REPORTS_DIR;
   }
 
   /**
    * Generate a PDF report and return the path to the saved file.
    */
   async generate(report: Report, upload: Upload): Promise<string> {
+    ensureReportsDir();
     const outputPath = path.join(this.outputDir, `report-${report.id}.pdf`);
 
     return new Promise((resolve, reject) => {

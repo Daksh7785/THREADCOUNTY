@@ -3,10 +3,12 @@ import Joi from 'joi';
 const emailSchema = Joi.string().email().required().max(255).trim();
 
 const passwordSchema = Joi.string()
-  .min(6)
+  .min(8)
+  .pattern(/^(?=.*[A-Z])(?=.*\d)/)
   .required()
   .messages({
-    'string.min': 'Password must be at least 6 characters long.',
+    'string.min': 'Password must be at least 8 characters long.',
+    'string.pattern.base': 'Password must contain at least one uppercase letter and one number.',
     'any.required': 'Password is required.',
   });
 
