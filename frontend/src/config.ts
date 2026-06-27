@@ -20,5 +20,6 @@ export const getImageUrl = (path?: string) => {
   if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  return `${API}/${path}`;
+  const base = API.endsWith('/api') ? API.slice(0, -4) : API;
+  return `${base}/${path}`;
 };

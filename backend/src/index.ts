@@ -75,6 +75,12 @@ app.use('/uploads', express.static(UPLOADS_DIR_READONLY));
 app.use('/backend/uploads', express.static(UPLOADS_DIR_TMP));
 app.use('/backend/uploads', express.static(UPLOADS_DIR_READONLY));
 
+app.use('/api/uploads', express.static(UPLOADS_DIR_TMP));
+app.use('/api/uploads', express.static(UPLOADS_DIR_READONLY));
+
+app.use('/api/backend/uploads', express.static(UPLOADS_DIR_TMP));
+app.use('/api/backend/uploads', express.static(UPLOADS_DIR_READONLY));
+
 // Fallback for missing uploads (serves matching seed images if actual files are missing)
 const handleUploadFallback = (req: Request, res: Response, next: NextFunction) => {
   const filename = path.basename(req.path).toLowerCase();
@@ -101,6 +107,8 @@ const handleUploadFallback = (req: Request, res: Response, next: NextFunction) =
 
 app.use('/uploads', handleUploadFallback);
 app.use('/backend/uploads', handleUploadFallback);
+app.use('/api/uploads', handleUploadFallback);
+app.use('/api/backend/uploads', handleUploadFallback);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
